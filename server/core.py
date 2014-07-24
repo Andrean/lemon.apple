@@ -18,3 +18,10 @@ class Core(object):
         self.Config = config
         global Instance # user for global access for Core
         Instance = self
+
+    def add(self, module):
+        instance = module(self)
+        if instance.Name == 'Storage':
+            self.Storage = instance
+        if instance.Name == 'Server':
+            self.Server = instance

@@ -1,15 +1,16 @@
 __author__ = 'Andrean'
 
+import logging
 
 class BaseServerModule(object):
     '''
     Base class for lemon server components.
     Everyone hase Core instance ref
     '''
-    def __init__(self, core):
-        self.__core = core
-        self.__logger = None
-        self.Name = "Base"
+    def __init__(self, core, name):
+        self._core = core
+        self._logger = logging.getLogger('main.'+name)
+        self.Name = name
 
     def start(self):
         raise NotImplementedError
