@@ -6,4 +6,4 @@ class Server(BaseServerModule):
 
     def __init__(self, _core):
         super().__init__(_core, 'Server')
-        self._logger.info("Created")
+        self._logger.info("Server initiated")

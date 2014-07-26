@@ -1,6 +1,9 @@
 __author__ = 'Andrean'
 
+from modules.base import BaseServerModule
+# module variables
 Instance = None
+
 
 class Core(object):
     '''
@@ -8,11 +11,7 @@ class Core(object):
     '''
     Config = {}
     # core components
-    Storage = None
-    Server = None
-    AgentManager = None
-    PluginManager = None
-    TaskManager = None
+    modules = {}
 
     def __init__(self, config = None):
         self.Config = config
@@ -21,7 +20,12 @@ class Core(object):
 
     def add(self, module):
         instance = module(self)
-        if instance.Name == 'Storage':
-            self.Storage = instance
-        if instance.Name == 'Server':
-            self.Server = instance
+        assert isinstance(instance, BaseServerModule)
+        self.modules[instance.Name] = instance
+
+    @property
+    def Storage(self):
+        return self.modules.get('Storage')
+    @property
+    def Server(self):
+        return self.modules.get('Server')

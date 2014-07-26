@@ -12,5 +12,5 @@ if __name__ == "__main__":
     c = core.Core(cfg)
     c.add(modules.storage.Storage)
     print(core.Instance)
-    print(c.Storage.Name)
+    print(c.Storage)
 
