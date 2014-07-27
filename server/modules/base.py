@@ -10,6 +10,7 @@ class BaseServerModule(object):
     def __init__(self, core, name):
         self._core = core
         self._logger = logging.getLogger('main.'+name)
+        self._config = core.Config.GetSection(name.upper())
         self.Name = name
 
     def start(self):

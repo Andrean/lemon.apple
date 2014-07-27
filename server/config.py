@@ -11,6 +11,7 @@ class Config(object):
     '''
     Storage = {}
     Server  = {}
+    root    = {}
 
     def __init__(self, file = None):
         self.file = file
@@ -19,9 +20,9 @@ class Config(object):
     def Load(self, filePath = None):
         if filePath is not None:
             self.file = filePath
-        file = yaml.load(open(self.file))
-        self.Storage = file.get('STORAGE', {})
-        self.Server  = file.get('SERVER', {})
+        self.root = yaml.load(open(self.file))
+        self.Storage = self.root.get('STORAGE', {})
+        self.Server  = self.root.get('SERVER', {})
 
     def LoadLogging(self, loggingFilePath):
         self.loggingFile = loggingFilePath
@@ -30,3 +31,6 @@ class Config(object):
             if item.__contains__('filename'):
                 os.makedirs(os.path.dirname(item['filename']), exist_ok = True)
         logging.config.dictConfig(file)
+
+    def GetSection(self, name):
+        return self.root.get(name, {})
