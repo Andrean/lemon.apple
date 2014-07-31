@@ -17,7 +17,7 @@ class BaseModel(object):
         self._raw = self.schema.init_data()
         self._data = self._raw
         if type(item) is dict:
-            self._id = item['_id']
+            self._id = item.get('_id')
             self.load_from(item)
         else:
             self._id = item

@@ -1,12 +1,10 @@
 __author__ = 'Andrean'
 
 import core
-import uuid
 import config
 import modules.storage
 import modules.server
 import modules.manager
-import models.components
 import time
 
 if __name__ == "__main__":
