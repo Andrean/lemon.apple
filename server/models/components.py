@@ -1,6 +1,7 @@
 __author__ = 'Andrean'
 
 import datetime
+import defs.cmd
 import uuid
 from bson.objectid import ObjectId
 from models.base import BaseModel, BaseSchema
@@ -9,6 +10,11 @@ from models.base import BaseModel, BaseSchema
 def SetupSchema():
     AgentSchema.setup()
     EntitySchema.setup()
+    DataItemSchema.setup()
+    DataMetaSchema.setup()
+    DataSchema.setup()
+    ContractorSchema.setup()
+    TriggerSchema.setup()
 
 
 #######################################################################
@@ -116,6 +122,12 @@ class TriggerSchema(BaseSchema):
 class Agent(BaseModel):
     Schema = AgentSchema
     Collection = 'agents'
+
+    def __init__(self, item=None):
+        super().__init__(item)
+        self.commands = defs.cmd.Commands()
+        if self['agent_id'] not in self['tags']:
+            self['tags'].append(self['agent_id'])
 
 
 class Entity(BaseModel):

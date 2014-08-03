@@ -4,16 +4,21 @@ import logging
 from urllib.parse import urlsplit
 from urllib.parse import parse_qs
 import json
+import bson.json_util
 import types
 import re
 import traceback
 import sys
 import controllers.base as BaseController
+import controllers.agent_controller as agentsController
 
 #####################################################################################
 #    Routes for routing agent's requests
 #####################################################################################
-AGENT_INTERFACE_ROUTES  = []
+AGENT_INTERFACE_ROUTES = [
+    [   'GET',    r'^/commands$', agentsController.commands['get']      ],
+    [   'POST',   r'^/commands$', agentsController.commands['post']     ],
+]
 
 #####################################################################################
 #    Routes for routing request from WEB-Server as web-interface
@@ -37,10 +42,39 @@ def MakeResponse(requestHandler):
         self.end_headers()
         self.wfile.write(bytes(content, 'utf-8'))
     def send_json(self, content, headers={}, code=200):
-        self.send_content( json.dumps(content), headers, code )
+        self.send_content( json.dumps(content, default=bson.json_util.default), headers, code )
     requestHandler.send_content = types.MethodType( send_content, requestHandler )
     requestHandler.send_json    = types.MethodType( send_json, requestHandler )
+    requestHandler.data = None
+    requestHandler.text = None
+    requestHandler.json = None
+    requestHandler = ParseBody(requestHandler)
     return requestHandler
+
+def ParseBody(req):
+    # get content type. If not found use default "text/plain" with encoding "utf-8"
+    content_type = req.headers.get('Content-Type','text/plain; charset=utf-8')
+    # if Content-Length is not found - do not read body
+    content_length = int(req.headers.get('Content-Length', 0))
+    match = re.match(r"([\w/-]+);\s*charset=([\w-]+)", content_type)
+    content_charset = 'utf-8'
+    if match:
+        content_charset = match.group(2)
+        content_type = match.group(1)
+    body = req.rfile.read(content_length)
+    if content_type == 'text/plain':
+        req.text = str(body, content_charset)
+        req.data = body
+        return req
+    if content_type == 'application/json':
+        req.json = json.loads(str(body, content_charset), object_hook=bson.json_util.object_hook)
+        return req
+    if content_type == 'application/octet-stream':
+        req.data = body
+    return req
+
+
+
 #####################################################################################
 
 
@@ -60,13 +94,13 @@ class Router(object):
         try:
             for rule in self._routes:
                 if rule['method'] == self._method and re.search(rule['pattern'], path):
-                        rule['action'](
+                    rule['action'](
                         MakeRequest(self._handler, path),
                         MakeResponse(self._handler)
                     )
-                return
+                    return
         except:
-            self._logger.error('{0}\n{1}'.format(self.name, ''.join(traceback.format_exception(*(sys.exc_info())))))
+            self._logger.error('{0}\n{1}'.format(self.Name, ''.join(traceback.format_exception(*(sys.exc_info())))))
             # HTTP 500 Handler
             BaseController.get_500(MakeRequest(self._handler, path), MakeResponse(self._handler))
 

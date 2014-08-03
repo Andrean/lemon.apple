@@ -35,6 +35,9 @@ class BaseModel(object):
         else:
             raise TypeError("'{0}' is not valid type for key '{1}' in schema".format(value, key))
 
+    def __str__(self):
+        return str(self._data)
+
     @property
     def data(self):
         return self._data
