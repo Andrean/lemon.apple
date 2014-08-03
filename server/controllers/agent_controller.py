@@ -17,7 +17,6 @@ def prepare_agent_request(f):
 def _get_commands(req, res):
     manager = core.Instance.Manager
     agent = manager.agents.get(req.agent_id)
-    manager.add_command('test_command', [agent['agent_id']])
     if agent is None:
         # agent not found. Add them to list
         manager.add_agent(req.agent_id)
