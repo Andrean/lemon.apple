@@ -25,7 +25,10 @@ AGENT_INTERFACE_ROUTES = [
 #    Routes for routing request from WEB-Server as web-interface
 #####################################################################################
 WEB_INTERFACE_ROUTES = [
-    [   'GET',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['get_entities']  ]
+    [   'GET',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['get_entities']],
+    [   'PUT',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['add_entity']  ],
+    [   'POST',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['modify_entity']  ],
+    [   'DELETE',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['del_entity']  ]
 ]
 
 #####################################################################################
@@ -84,7 +87,7 @@ def ParseBody(req):
 class Router(object):
     def __init__(self, name):
         self.Name = name
-        self.Methods = ['GET', 'POST', 'PUT', 'HEAD']
+        self.Methods = ['GET', 'POST', 'PUT', 'HEAD', 'DELETE']
         self._logger = logging.getLogger('main.'+self.Name)
         self._routes = []
         self._handler = {}

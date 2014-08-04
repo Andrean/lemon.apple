@@ -5,6 +5,7 @@ import defs.cmd
 import uuid
 from bson.objectid import ObjectId
 from models.base import BaseModel, BaseSchema
+import core
 
 
 def SetupSchema():
@@ -47,7 +48,7 @@ class EntitySchema(BaseSchema):
             'info': {
                 'name': "",
                 'description': "",
-                '_addedAt': datetime.datetime,
+                '_added_at': datetime.datetime,
                 '_last_check': datetime.datetime,
                 'status': ""
             },
@@ -138,10 +139,46 @@ class Agent(BaseModel):
     def entities(self):
         return self['entities']
 
+    def add_entity(self, entity):
+        _id = None
+        if isinstance(entity, Entity):
+            _id = entity.id
+        if type(entity) is ObjectId:
+            _id = entity
+        if _id is not None and _id not in self.entities:
+            self.entities.append(_id)
+        self.save()
+
+    def del_entity(self, entity):
+        if isinstance(entity, Entity):
+            _id = entity.id
+        if type(entity) is ObjectId:
+            _id = entity
+        if _id is not None:
+            self.entities.remove(_id)
+        self.save()
+
 
 class Entity(BaseModel):
     Schema = EntitySchema
     Collection = 'entities'
+
+    def set_agent(self, agent):
+        _id = None
+        if isinstance(agent, Agent):
+            _id = agent.id
+        if type(agent) == ObjectId:
+            _id = agent
+        last_agent_id = self['agent']
+        if last_agent_id is not None:
+            agent = core.Instance.Manager.get_agent(last_agent_id)
+            if agent is not None:
+                agent.del_entity(self)
+        self['agent'] = _id
+        agent = core.Instance.Manager.get_agent(_id)
+        if agent is not None:
+            agent.add_entity(self)
+        self.save()
 
 
 class DataItem(BaseModel):

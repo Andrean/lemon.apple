@@ -54,8 +54,10 @@ class BaseModel(object):
         self._raw = item
         self._data = item
 
-    def load(self):
+    def load(self, _id=None):
         db = self.get_connection()
+        if _id is not None:
+            self._id = _id
         if self._id is not None:
             self._dbref = bson.dbref.DBRef(self._collection, self._id)
             self._raw = db.dereference(self._dbref)
@@ -69,11 +71,16 @@ class BaseModel(object):
             self._id = _id
             self._dbref = bson.dbref.DBRef(self._collection, self._id)
 
+    def remove(self):
+        db = self.get_connection()
+        if self._id is not None:
+            db[self._collection].remove({'_id': self._id})
+
     def populate(self, *fields):
         if len(fields) > 0:
             for k in fields:
-                self._data = self._populate(self._data, self.schema, k)
-        self._data = self._populate(self._data, self.schema)
+                self._data = self._populate(self._data, self.schema._schema, k)
+        return self
     
     def _populate(self, data, schema, field=None):
         """
@@ -84,13 +91,13 @@ class BaseModel(object):
         :param schema: current schema of data
         :param field: field, which need to be populated
         """
-        if schema is list:
+        if type(schema) is list:
             if data is not list:
                 raise AttributeError
             for i, v in enumerate(data):
                 data[i] = self._populate(v, schema[0], field)
             return data
-        if schema is not dict:
+        if type(schema) is not dict:
             return data
         if field is not None:
             v = schema.get(field)
@@ -101,9 +108,9 @@ class BaseModel(object):
             for k, v in schema.items():
                 data[k] = self._populate(data[k],v)
             return data
-        model_instance = ref(data)
-        data = model_instance.load()
-        return data
+        model_instance = ref({'_id':data})
+        model_instance.load()
+        return model_instance.data
 
     def find(self, query):
         con = self.get_connection()
@@ -148,8 +155,16 @@ class BaseSchema(object):
         item = self._schema.get(key)
         if item is None:
             return False
+        if value is None:
+            return True
         if type(value) == type(item):
             return True
+        if type(item) is dict:
+            type_key = item.get('type')
+            if type_key is not None:
+                if isinstance(value, type_key):
+                    return True
+                return False
         if isinstance(value, item):
             return True
         return False
