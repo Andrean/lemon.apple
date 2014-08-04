@@ -28,7 +28,12 @@ class AgentSchema(BaseSchema):
             'agent_id': uuid.UUID,
             'name': "",
             'tags': [""],
-            'entities': [ {'type': ObjectId,'ref': Entity} ]
+            'entities': [ {'type': ObjectId,'ref': Entity} ],
+            '_sysinfo': {
+                'network_address': "",
+                'last_connect': datetime.datetime,
+                'added_at': datetime.datetime
+            }
         }
 
 
@@ -37,12 +42,14 @@ class EntitySchema(BaseSchema):
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'entity_id': "",
+            'entity_id': uuid.UUID,
             'agent': {'type': ObjectId, 'ref': Agent},
             'info': {
                 'name': "",
                 'description': "",
-                '_addedAt': datetime.datetime
+                '_addedAt': datetime.datetime,
+                '_last_check': datetime.datetime,
+                'status': ""
             },
             'data_items': [ {'type': ObjectId, 'ref': DataItem} ]
         }
@@ -126,8 +133,10 @@ class Agent(BaseModel):
     def __init__(self, item=None):
         super().__init__(item)
         self.commands = defs.cmd.Commands()
-        if self['agent_id'] not in self['tags']:
-            self['tags'].append(self['agent_id'])
+
+    @property
+    def entities(self):
+        return self['entities']
 
 
 class Entity(BaseModel):

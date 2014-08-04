@@ -11,6 +11,7 @@ import traceback
 import sys
 import controllers.base as BaseController
 import controllers.agent_controller as agentsController
+import controllers.web  as webController
 
 #####################################################################################
 #    Routes for routing agent's requests
@@ -23,7 +24,9 @@ AGENT_INTERFACE_ROUTES = [
 #####################################################################################
 #    Routes for routing request from WEB-Server as web-interface
 #####################################################################################
-WEB_INTERFACE_ROUTES = []
+WEB_INTERFACE_ROUTES = [
+    [   'GET',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['get_entities']  ]
+]
 
 #####################################################################################
 #   Functions for make request and response references

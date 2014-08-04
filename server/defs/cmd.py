@@ -6,6 +6,10 @@ from uuid import uuid4
 import copy
 
 
+class BaseCommands(enum.Enum):
+    get_info = "_.get_info"
+
+
 class CommandStatusEnum(enum.IntEnum):
     error = -1
     present = 0
