@@ -3,6 +3,7 @@ __author__ = 'Andrean'
 import datetime
 import defs.cmd
 import uuid
+import hashlib
 from bson.objectid import ObjectId
 from bson.binary import Binary
 from models.base import BaseModel, BaseSchema
@@ -109,8 +110,9 @@ class ContractorSchema(BaseSchema):
     def setup_schema(cls):
         cls._schema = {
             'name': "",
-            'script': Binary, # bytes object
-            '_type': ""
+            'data': Binary, # binary object
+            '_type': "",
+            '_hash': ""
         }
 
 
@@ -327,6 +329,22 @@ class Data(BaseModel):
 class Contractor(BaseModel):
     Schema = ContractorSchema
     Collection = 'contractors'
+
+    @classmethod
+    def add_new(cls, name, binary_data):
+        contractor = cls()
+        contractor['name'] = name
+        contractor['data'] = Binary(binary_data)
+        contractor['_type'] = "python"
+        contractor['_hash'] = cls.get_md5(contractor['data'])
+        contractor.save()
+        return contractor
+
+    @staticmethod
+    def get_md5(data):
+        md5 = hashlib.md5()
+        md5.update(data)
+        return md5.hexdigest()
 
 
 class Trigger(BaseModel):

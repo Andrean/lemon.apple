@@ -25,11 +25,13 @@ AGENT_INTERFACE_ROUTES = [
 #    Routes for routing request from WEB-Server as web-interface
 #####################################################################################
 WEB_INTERFACE_ROUTES = [
-    [   'GET',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['get_entities']],
-    [   'PUT',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['add_entity']  ],
-    [   'POST',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['modify_entity']  ],
-    [   'DELETE',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['del_entity']  ],
-    [   'GET',  r'^/agents[?=%&_\-\+\w,]*$', webController.agent_manager['get_agents']  ]
+    [   'GET',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['get_entities']],
+    [   'PUT',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['add_entity']  ],
+    [   'POST',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['modify_entity']  ],
+    [   'DELETE',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['del_entity']  ],
+    [   'GET',  r'^/agents[?=%&_\-\+\w,\.]*$', webController.agent_manager['get_agents']  ],
+    [   'GET',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.get ],
+    [   'POST',  r'^/contractors$', webController.contractors.add                ]
 ]
 
 #####################################################################################
@@ -40,7 +42,7 @@ def MakeRequest(requestHandler, path):
     return requestHandler
 
 def MakeResponse(requestHandler):
-    def send_content(self, content, headers={}, code=200):
+    def send_content(self, content, code=200, headers={}):
         self.send_response(code)
         self.send_header('Content-Type','text/plain;charset=utf-8')
         self.send_header('Content-Length',len(content))
@@ -48,8 +50,8 @@ def MakeResponse(requestHandler):
             self.send_header(header, value)
         self.end_headers()
         self.wfile.write(bytes(content, 'utf-8'))
-    def send_json(self, content, headers={}, code=200):
-        self.send_content( json.dumps(content, default=bson.json_util.default), headers, code )
+    def send_json(self, content, code=200, headers={}):
+        self.send_content( json.dumps(content, default=bson.json_util.default), code, headers )
     requestHandler.send_content = types.MethodType( send_content, requestHandler )
     requestHandler.send_json    = types.MethodType( send_json, requestHandler )
     requestHandler.data = None
@@ -109,7 +111,7 @@ class Router(object):
         except:
             self._logger.error('{0}\n{1}'.format(self.Name, ''.join(traceback.format_exception(*(sys.exc_info())))))
             # HTTP 500 Handler
-            BaseController.get_500(MakeRequest(self._handler, path), MakeResponse(self._handler))
+            BaseController.get_500(self._handler)
 
 
     def add_route(self, method, url_pattern, action):
