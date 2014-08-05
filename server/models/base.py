@@ -9,6 +9,8 @@ import core
 class BaseModel(object):
     Schema = None
     Collection = None
+    Instances = None
+    _index_objectId = None
 
     def __init__(self, item=None):
         self._dbref = {}
@@ -16,13 +18,46 @@ class BaseModel(object):
         self.schema = self.Schema()
         self._raw = self.schema.init_data()
         self._data = self._raw
+        self._id = None
         if type(item) is dict:
             self._id = item.get('_id')
             self.load_from(item)
         else:
-            self._id = item
+            self.load(item)
 
-    def get_connection(self):
+    @classmethod
+    def findById(cls, obj_id):
+        try:
+            if cls._index_objectId is not None:
+                return cls.Instances[cls._index_objectId.get(obj_id)]
+            else:
+                conn = cls.get_connection()
+                item = conn[cls.Collection].find_one(obj_id)
+                if item is not None:
+                    return cls(item)
+                return None
+        except:
+            return None
+
+    @classmethod
+    def load_instances(cls):
+        conn = cls.get_connection()
+        cls.Instances = []
+        cls._index_objectId = {}
+        pointer = 0
+        for item in conn[cls.Collection].find({}):
+            model = cls(item)
+            cls.Instances.append(model)
+            cls._index_objectId[model.id] = pointer
+            pointer += 1
+        cls.create_indexes()
+
+    @classmethod
+    def create_indexes(cls):
+        pass
+
+    @staticmethod
+    def get_connection():
         return core.Instance.Storage.connection
 
     def __getitem__(self, item):
@@ -37,6 +72,13 @@ class BaseModel(object):
 
     def __str__(self):
         return str(self._data)
+
+    @classmethod
+    def get_data(cls):
+        if cls.Instances is not None:
+            return [x.data for x in cls.Instances]
+        conn = cls.get_connection()
+        return [x for x in conn[cls.Collection].find({})]
 
     @property
     def data(self):
@@ -70,17 +112,21 @@ class BaseModel(object):
         if type(_id) is bson.ObjectId:
             self._id = _id
             self._dbref = bson.dbref.DBRef(self._collection, self._id)
+            self.load_instances()
+        return self
 
     def remove(self):
         db = self.get_connection()
         if self._id is not None:
             db[self._collection].remove({'_id': self._id})
+            self.load_instances()
 
-    def populate(self, *fields):
+    def populate(self, *fields): # returns populated DATA!!
+        data = copy.deepcopy(self._data)
         if len(fields) > 0:
             for k in fields:
-                self._data = self._populate(self._data, self.schema._schema, k)
-        return self
+                data = self._populate(data, self.schema._schema, k)
+        return data
     
     def _populate(self, data, schema, field=None):
         """
