@@ -18,7 +18,6 @@ if __name__ == "__main__":
         c.add(modules.server.Server)
         c.add(modules.manager.Manager)
         c.start()
-        print([x.data for x in c.Manager.agents.Instances])
         while True:
             time.sleep(0.01)
     except KeyboardInterrupt:
