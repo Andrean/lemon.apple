@@ -63,8 +63,8 @@ class DataItemSchema(BaseSchema):
         cls._schema = {
             'name': "",
             'entity': {'type': ObjectId, 'ref': Entity},
-            'type': "",
-            'contractor': {'type': ObjectId, 'ref':Contractor},
+            'data_type': "",
+            'contractor': {'type': ObjectId, 'ref': Contractor},
             'trigger': {'type': ObjectId, 'ref': Trigger},
             'data': {'type': ObjectId, 'ref': DataMeta}
         }
@@ -108,7 +108,8 @@ class ContractorSchema(BaseSchema):
     def setup_schema(cls):
         cls._schema = {
             'name': "",
-            'script': ""
+            'script': b'', # bytes object
+            '_type': ""
         }
 
 

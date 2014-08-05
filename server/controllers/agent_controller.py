@@ -20,7 +20,7 @@ def _get_commands(req, res):
     agent = manager.agents.get(req.agent_id)
     if agent is None:
         # agent not found. Add them to list
-        manager.add_agent(req.agent_id, req.client_address[0])
+        agent = manager.add_agent(req.agent_id, req.client_address[0])
     agent['_sysinfo']['last_connect'] = datetime.datetime.now()
     agent.save()
     cmd_list = manager.agents[req.agent_id].commands.find(CmdStatus.present)

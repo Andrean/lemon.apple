@@ -38,7 +38,7 @@ def entity_manager__get_entities(req, res):
             entity = manager.entities.get(entity_id)
             if entity is not None:
                 entities.append(entity)
-        res.send_json(entities)
+        res.send_json([x.populate(*populate).data for x in entities])
         return
     if agent_ids is not None:
         entities = []
@@ -46,7 +46,7 @@ def entity_manager__get_entities(req, res):
             agent = manager.agents.get(agent_id)
             if agent is not None:
                 entities.extend(agent.entities)
-        res.send_json(entities)
+        res.send_json([x.populate(*populate).data for x in entities])
         return
     if tags is not None:
         entities = []
@@ -55,7 +55,7 @@ def entity_manager__get_entities(req, res):
                 if tag in agent['tags']:
                     entities.extend(agent.entities)
                     break
-        res.send_json(entities)
+        res.send_json([x.populate(*populate).data for x in entities])
         return
     res.send_json([x.populate(*populate).data for x in manager.entities.values()])
 
@@ -133,3 +133,33 @@ entity_manager['add_entity'] = entity_manager__add_entity
 entity_manager['modify_entity'] = entity_manager__modify_entity
 entity_manager['del_entity'] = entity_manager__del_entity
 ################################################################
+
+################################################################
+#
+#
+# """
+#     Agents management controllers:
+#         get_agents: get list of agents by filter
+#             filter:
+#                 tag
+# """
+################################################################
+agent_manager = {}
+
+
+def get_agents(req, res):
+    tags = req.query.get('tag')
+    populate = req.query.get('populate', [])
+    manager = core.Instance.Manager
+    agents = []
+    if tags is not None:
+        for agent in manager.agents.values():
+            for tag in tags:
+                if tag in agent['tags']:
+                    agents.append(agent)
+                break
+        res.send_json([x.populate(*populate).data for x in agents])
+        return
+    res.send_json([x.populate(*populate).data for x in manager.agents.values()])
+
+agent_manager['get_agents'] = get_agents

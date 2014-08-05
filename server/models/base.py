@@ -92,7 +92,7 @@ class BaseModel(object):
         :param field: field, which need to be populated
         """
         if type(schema) is list:
-            if data is not list:
+            if type(data) is not list:
                 raise AttributeError
             for i, v in enumerate(data):
                 data[i] = self._populate(v, schema[0], field)

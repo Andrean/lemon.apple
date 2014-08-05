@@ -52,6 +52,7 @@ class Manager(BaseServerModule):
         agent['_sysinfo']['last_connect'] = datetime.datetime.now()
         agent.save()
         self._agents[agent_id] = agent
+        return self._agents[agent_id]
 
     def add_entity(self, agent_id, name, description):
         self._logger.info("Add new entity {1} to agent {0} to database".format(agent_id, name))

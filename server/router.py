@@ -28,7 +28,8 @@ WEB_INTERFACE_ROUTES = [
     [   'GET',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['get_entities']],
     [   'PUT',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['add_entity']  ],
     [   'POST',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['modify_entity']  ],
-    [   'DELETE',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['del_entity']  ]
+    [   'DELETE',  r'^/entities[?=%&_\-\+\w,]*$', webController.entity_manager['del_entity']  ],
+    [   'GET',  r'^/agents[?=%&_\-\+\w,]*$', webController.agent_manager['get_agents']  ]
 ]
 
 #####################################################################################
