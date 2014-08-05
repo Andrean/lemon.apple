@@ -26,6 +26,13 @@ class BaseModel(object):
             self.load(item)
 
     @classmethod
+    def list_instances(cls, filter={}):
+        if cls.Instances is not None:
+            return cls.Instances
+        conn = cls.get_connection()
+        return [x for x in conn[cls.Collection].find(filter)]
+
+    @classmethod
     def findById(cls, obj_id):
         try:
             if cls._index_objectId is not None:

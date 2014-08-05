@@ -34,3 +34,8 @@ class Manager(BaseServerModule):
         if models.components.Entity.Instances is None:
             models.components.Entity.load_instances()
         return models.components.Entity
+
+    @property
+    def contractors(self):
+        # don't load all instances to memory
+        return models.components.Contractor

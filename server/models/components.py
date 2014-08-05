@@ -4,6 +4,7 @@ import datetime
 import defs.cmd
 import uuid
 from bson.objectid import ObjectId
+from bson.binary import Binary
 from models.base import BaseModel, BaseSchema
 import core
 
@@ -108,7 +109,7 @@ class ContractorSchema(BaseSchema):
     def setup_schema(cls):
         cls._schema = {
             'name': "",
-            'script': b'', # bytes object
+            'script': Binary, # bytes object
             '_type': ""
         }
 
