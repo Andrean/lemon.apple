@@ -346,6 +346,13 @@ class Contractor(BaseModel):
         md5.update(data)
         return md5.hexdigest()
 
+    @property
+    def short_view(self):
+        data = self._data.copy()
+        data['size'] = len(self['data'])
+        data['data'] = None
+        return data
+
 
 class Trigger(BaseModel):
     Schema = TriggerSchema

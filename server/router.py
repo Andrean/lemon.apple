@@ -1,6 +1,7 @@
 __author__ = 'Andrean'
 
 import logging
+import defs.errors as errors
 from urllib.parse import urlsplit
 from urllib.parse import parse_qs
 import json
@@ -41,17 +42,23 @@ def MakeRequest(requestHandler, path):
     requestHandler.query = parse_qs((urlsplit(path)).query)
     return requestHandler
 
+def send_content(self, content, code=200, headers={}):
+    self.send_response(code)
+    if 'Content-Type' not in headers.keys():
+        self.send_header('Content-Type', 'text/plain;charset=utf-8')
+    if 'Content-Length' not in headers.keys():
+        self.send_header('Content-Length', len(content))
+    for header, value in headers.items():
+        self.send_header(header, value)
+    self.end_headers()
+    self.wfile.write(bytes(content, 'utf-8'))
+
+def send_json(self, content, code=200, headers={}):
+    if 'Content_Type' not in headers.keys():
+        headers['Content-Type'] = 'application/json; charset=utf8'
+    self.send_content( json.dumps(content, default=bson.json_util.default), code, headers )
+
 def MakeResponse(requestHandler):
-    def send_content(self, content, code=200, headers={}):
-        self.send_response(code)
-        self.send_header('Content-Type','text/plain;charset=utf-8')
-        self.send_header('Content-Length',len(content))
-        for header, value in headers.items():
-            self.send_header(header, value)
-        self.end_headers()
-        self.wfile.write(bytes(content, 'utf-8'))
-    def send_json(self, content, code=200, headers={}):
-        self.send_content( json.dumps(content, default=bson.json_util.default), code, headers )
     requestHandler.send_content = types.MethodType( send_content, requestHandler )
     requestHandler.send_json    = types.MethodType( send_json, requestHandler )
     requestHandler.data = None
@@ -108,6 +115,11 @@ class Router(object):
                         MakeResponse(self._handler)
                     )
                     return
+        except errors.BaseLemonException as e:
+            self._logger.error(e)
+            self._handler.send_content = types.MethodType( send_content, self._handler )
+            self._handler.send_json    = types.MethodType( send_json, self._handler )
+            self._handler.send_json({'error': e.message})
         except:
             self._logger.error('{0}\n{1}'.format(self.Name, ''.join(traceback.format_exception(*(sys.exc_info())))))
             # HTTP 500 Handler
