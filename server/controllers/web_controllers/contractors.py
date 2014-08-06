@@ -34,4 +34,15 @@ def add(req, res):
     raise defs.errors.LemonAttributeError('body is not JSON')
 
 def remove(req, res):
-    pass
+    names = req.query.get('name')
+    if names is None:
+        raise defs.errors.LemonAttributeError('name is not found')
+    manager = core.Instance.Manager
+    removed = {}
+    for name in names:
+        removed[name] = None
+        contractor = manager.contractors.findByName(name)
+        if contractor is not None:
+            contractor.remove()
+            removed[name] = True
+    res.send_json(removed)

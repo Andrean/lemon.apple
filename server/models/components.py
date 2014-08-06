@@ -336,6 +336,7 @@ class Data(BaseModel):
 class Contractor(BaseModel):
     Schema = ContractorSchema
     Collection = 'contractors'
+    _index_name = None
 
     @classmethod
     def add_new(cls, name, binary_data):
@@ -359,6 +360,18 @@ class Contractor(BaseModel):
         data['size'] = len(self['data'])
         data['data'] = None
         return data
+
+    @classmethod
+    def findByName(cls, name):
+        try:
+            assert(isinstance(name, str))
+            conn = cls.get_connection()
+            item = conn[cls.Collection].find_one({'name': name})
+            if item is not None:
+                return cls(item)
+        except:
+            pass
+        return None
 
 
 class Trigger(BaseModel):
