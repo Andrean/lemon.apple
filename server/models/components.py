@@ -18,6 +18,9 @@ def SetupSchema():
     ContractorSchema.setup()
     TriggerSchema.setup()
 
+def Le(**kwargs):
+    kwargs['_lemon_field'] = True
+    return kwargs
 
 #######################################################################
 #   describe ModelSchemas
@@ -38,7 +41,7 @@ class AgentSchema(BaseSchema):
             'agent_id': uuid.UUID,
             'name': str,
             'tags': [str],
-            'entities': [ {'type': ObjectId,'ref': Entity, '_lemon_field': True} ],
+            'entities': [ Le(type=ObjectId,ref=Entity) ],
             '_sysinfo': {
                 'network_address': str,
                 'last_connect': datetime.datetime,
@@ -53,15 +56,15 @@ class EntitySchema(BaseSchema):
     def setup_schema(cls):
         cls._schema = {
             'entity_id': uuid.UUID,
-            'agent': {'type': ObjectId, 'ref': Agent, '_lemon_field': True},
+            'agent': Le(type=ObjectId, ref=Agent),
             'info': {
-                'name': { '_lemon_field':True, 'type': str, 'unique': True},
+                'name': Le(type=str, unique=True),
                 'description': str,
                 '_added_at': datetime.datetime,
                 '_last_check': datetime.datetime,
                 'status': str
             },
-            'data_items': [ {'type': ObjectId, 'ref': DataItem, '_lemon_field': True} ]
+            'data_items': [ Le(type=ObjectId, ref=DataItem) ]
         }
 
 
@@ -71,11 +74,11 @@ class DataItemSchema(BaseSchema):
     def setup_schema(cls):
         cls._schema = {
             'name': str,
-            'entity': {'type': ObjectId, 'ref': Entity, '_lemon_field': True},
+            'entity': Le(type=ObjectId, ref=Entity),
             'data_type': str,
-            'contractor': {'type': ObjectId, 'ref': Contractor, '_lemon_field': True},
-            'trigger': {'type': ObjectId, 'ref': Trigger, '_lemon_field': True},
-            'data': {'type': ObjectId, 'ref': DataMeta, '_lemon_field': True}
+            'contractor': Le(type=ObjectId, ref=Contractor),
+            'trigger': Le(type=ObjectId, ref=Trigger),
+            'data': Le(type=ObjectId, ref=DataMeta)
         }
 
 
@@ -116,10 +119,10 @@ class ContractorSchema(BaseSchema):
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'name': { '_lemon_field':True, 'type': str, 'unique': True},
+            'name': Le(type=str, unique=True),
             'data': Binary, # binary object
             '_type': str,
-            '_hash': str
+            '_hash': Le(type=str, unique=True)
         }
 
 
@@ -128,7 +131,7 @@ class TriggerSchema(BaseSchema):
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'name': { '_lemon_field':True, 'type': str, 'unique': True},
+            'name': Le(type=str, unique=True),
             'trigger': str
         }
 #######################################################################

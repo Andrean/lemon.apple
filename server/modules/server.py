@@ -72,7 +72,6 @@ class Listener(threading.Thread):
     def listen(self):
         self._httpd = ThreadingHTTPServer(self._endpoint, self._handler)
         self._httpd.daemon_threads = True
-        self._httpd.timeout = 3
         self._httpd.request_router = self._router
         self._httpd.serve_forever()
 
