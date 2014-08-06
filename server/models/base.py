@@ -15,8 +15,8 @@ class BaseModel(object):
     def __init__(self, item=None):
         self._dbref = {}
         self._collection = self.__class__.Collection
-        self.schema = self.Schema()
-        self._raw = self.schema.init_data()
+        self.schema_instance = self.Schema()
+        self._raw = self.schema_instance.init_data()
         self._data = self._raw
         self._id = None
         if type(item) is dict:
@@ -71,7 +71,7 @@ class BaseModel(object):
         return self._data.get(item)
 
     def __setitem__(self, key, value):
-        if self.schema.is_valid(key, value):
+        if self.schema_instance.is_valid(key, value):
             self._raw[key] = value
             self._data[key] = value
         else:
@@ -132,7 +132,7 @@ class BaseModel(object):
         data = copy.deepcopy(self._data)
         if len(fields) > 0:
             for k in fields:
-                data = self._populate(data, self.schema._schema, k)
+                data = self._populate(data, self.schema_instance._schema, k)
         return data
     
     def _populate(self, data, schema, field=None):
@@ -156,19 +156,27 @@ class BaseModel(object):
             v = schema.get(field)
             data[field] = self._populate(data[field], v)
             return data
-        ref = schema.get('ref')
-        if ref is None:
+        _lemon_field = schema.get('_lemon_field')
+        if _lemon_field is not True:
             for k, v in schema.items():
                 data[k] = self._populate(data[k],v)
             return data
-        model_instance = ref({'_id':data})
-        model_instance.load()
-        return model_instance.data
+        ref = schema.get('ref')
+        if ref is not None:
+            model_instance = ref({'_id':data})
+            model_instance.load()
+            return model_instance.data
+        return data
 
     def find(self, query):
         con = self.get_connection()
         for v in  con[self._collection].find(query):
             yield self.__class__(v)
+
+    @classmethod
+    def ensure_index_schema(cls):
+        cls.Schema.ensure_index(cls)
+
 
 
 class BaseSchema(object):
@@ -192,9 +200,8 @@ class BaseSchema(object):
     def _init_data(self, schema):
         for k, v in schema.items():
             if type(v) == dict:
-                _type = v.get('type')
-                _ref = v.get('ref')
-                if _ref is not None or _type is not None:
+                _lemon_field = v.get('_lemon_field')
+                if _lemon_field is not None:
                     schema[k] = None
                 else:
                     schema[k] = self._init_data(v)
@@ -212,15 +219,75 @@ class BaseSchema(object):
             return True
         if type(value) == type(item):
             return True
+        if type(value) == item:
+            return True
         if type(item) is dict:
-            type_key = item.get('type')
-            if type_key is not None:
+            is_lemon_field = item.get('_lemon_field')
+            if is_lemon_field is True:
+                type_key = item.get('type')
                 if isinstance(value, type_key):
                     return True
                 return False
         if isinstance(value, item):
             return True
         return False
+
+    @classmethod
+    def ensure_index(cls, model):
+        assert(issubclass(model, BaseModel))
+        connection = model.get_connection()
+        collection = model.Collection
+        all_indexes = cls._ensure_index(cls._schema)
+
+        def get_index_fields(index):
+            if index is None:
+                return None, None
+            if index is 'unique':
+                return True, None
+            if index is 'index':
+                return None, True
+            uniques = []
+            indexes = []
+            for k, v in index.items():
+                result_u, result_i = get_index_fields(v)
+                if type(result_u) is list and len(result_u) > 0:
+                    for field in result_u:
+                        uniques.append(k+'.'+field)
+                if result_u is True:
+                    uniques.append(k)
+                if type(result_i) is list and len(result_i) > 0:
+                    for field in result_i:
+                        indexes.append(k+'.'+field)
+                if result_i is True:
+                    indexes.append(k)
+            return uniques, indexes
+
+        if type(all_indexes) is dict:
+            uniques, indexes = get_index_fields(all_indexes)
+            for index in uniques:
+                connection[collection].ensure_index(index,unique=True)
+            for index in indexes:
+                connection[collection].ensure_index(index)
+
+    @classmethod
+    def _ensure_index(cls, schema):
+        if type(schema) is dict:
+            _lemon_field = schema.get('_lemon_field')
+            if _lemon_field is True:
+                unique = schema.get('unique')
+                if unique is True:
+                    return 'unique'
+                index = schema.get('index')
+                if index is True:
+                    return 'index'
+                return None
+            indexes = {}
+            for k, v in schema.items():
+                indexes[k] = cls._ensure_index(v)
+            return indexes
+        if type(schema) is list:
+            return cls._ensure_index(schema[0])
+        return None
 
 
 class ItemNotFoundException(Exception):

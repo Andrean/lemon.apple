@@ -19,9 +19,17 @@ class Manager(BaseServerModule):
 
     def start(self):
         self._storage = core.Instance.Storage
+        self.ensure_index()
 
     def stop(self):
         pass
+
+    def ensure_index(self):
+        self._logger.info('Start indexing of data')
+        models.components.Agent.ensure_index_schema()
+        models.components.Entity.ensure_index_schema()
+        models.components.Contractor.ensure_index_schema()
+        self._logger.info('Indexing is over')
 
     @property
     def agents(self):

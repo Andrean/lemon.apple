@@ -4,6 +4,7 @@ import logging
 import defs.errors as errors
 from urllib.parse import urlsplit
 from urllib.parse import parse_qs
+import pymongo.errors
 import json
 import bson.json_util
 import types
@@ -116,10 +117,15 @@ class Router(object):
                     )
                     return
         except errors.BaseLemonException as e:
-            self._logger.error(e)
+            self._logger.exception(e)
             self._handler.send_content = types.MethodType( send_content, self._handler )
             self._handler.send_json    = types.MethodType( send_json, self._handler )
             self._handler.send_json({'error': e.message})
+        except pymongo.errors.PyMongoError as e:
+            self._logger.exception(e)
+            self._handler.send_content = types.MethodType( send_content, self._handler )
+            self._handler.send_json    = types.MethodType( send_json, self._handler )
+            self._handler.send_json({'error': str(e)})
         except:
             self._logger.error('{0}\n{1}'.format(self.Name, ''.join(traceback.format_exception(*(sys.exc_info())))))
             # HTTP 500 Handler

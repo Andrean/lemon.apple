@@ -7,7 +7,6 @@ import hashlib
 from bson.objectid import ObjectId
 from bson.binary import Binary
 from models.base import BaseModel, BaseSchema
-import core
 
 
 def SetupSchema():
@@ -21,7 +20,15 @@ def SetupSchema():
 
 
 #######################################################################
-# describe schemas
+#   describe ModelSchemas
+#
+#   System fields:
+#   _lemon_field:  if True shows up that dict field is system definition of field
+#   type:   Class reference. Shows type of that field
+#   ref:    Reference to another Model
+#   unique: Ensures index in MongoDB with UNIQUE: TRUE
+#   index:  if True Ensures index in MongoDB on that field in PyMongo.ASCENDING order
+#
 #######################################################################
 class AgentSchema(BaseSchema):
 
@@ -29,11 +36,11 @@ class AgentSchema(BaseSchema):
     def setup_schema(cls):
         cls._schema = {
             'agent_id': uuid.UUID,
-            'name': "",
-            'tags': [""],
-            'entities': [ {'type': ObjectId,'ref': Entity} ],
+            'name': str,
+            'tags': [str],
+            'entities': [ {'type': ObjectId,'ref': Entity, '_lemon_field': True} ],
             '_sysinfo': {
-                'network_address': "",
+                'network_address': str,
                 'last_connect': datetime.datetime,
                 'added_at': datetime.datetime
             }
@@ -46,15 +53,15 @@ class EntitySchema(BaseSchema):
     def setup_schema(cls):
         cls._schema = {
             'entity_id': uuid.UUID,
-            'agent': {'type': ObjectId, 'ref': Agent},
+            'agent': {'type': ObjectId, 'ref': Agent, '_lemon_field': True},
             'info': {
-                'name': "",
-                'description': "",
+                'name': { '_lemon_field':True, 'type': str, 'unique': True},
+                'description': str,
                 '_added_at': datetime.datetime,
                 '_last_check': datetime.datetime,
-                'status': ""
+                'status': str
             },
-            'data_items': [ {'type': ObjectId, 'ref': DataItem} ]
+            'data_items': [ {'type': ObjectId, 'ref': DataItem, '_lemon_field': True} ]
         }
 
 
@@ -63,12 +70,12 @@ class DataItemSchema(BaseSchema):
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'name': "",
-            'entity': {'type': ObjectId, 'ref': Entity},
-            'data_type': "",
-            'contractor': {'type': ObjectId, 'ref': Contractor},
-            'trigger': {'type': ObjectId, 'ref': Trigger},
-            'data': {'type': ObjectId, 'ref': DataMeta}
+            'name': str,
+            'entity': {'type': ObjectId, 'ref': Entity, '_lemon_field': True},
+            'data_type': str,
+            'contractor': {'type': ObjectId, 'ref': Contractor, '_lemon_field': True},
+            'trigger': {'type': ObjectId, 'ref': Trigger, '_lemon_field': True},
+            'data': {'type': ObjectId, 'ref': DataMeta, '_lemon_field': True}
         }
 
 
@@ -77,7 +84,7 @@ class DataMetaSchema(BaseSchema):
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'meta_id': "",
+            'meta_id': str,
             'count': 0,
             'last': {
                 'data': {},
@@ -91,8 +98,8 @@ class DataSchema(BaseSchema):
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'meta_id': "",
-            'num': 0,
+            'meta_id': str,
+            'num': int,
             'chunk': [
                 {
                     'data': {},
@@ -109,10 +116,10 @@ class ContractorSchema(BaseSchema):
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'name': "",
+            'name': { '_lemon_field':True, 'type': str, 'unique': True},
             'data': Binary, # binary object
-            '_type': "",
-            '_hash': ""
+            '_type': str,
+            '_hash': str
         }
 
 
@@ -121,8 +128,8 @@ class TriggerSchema(BaseSchema):
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'name': "",
-            'trigger': ""
+            'name': { '_lemon_field':True, 'type': str, 'unique': True},
+            'trigger': str
         }
 #######################################################################
 
