@@ -118,8 +118,13 @@ def modify(req, res):
 def remove(req, res):
     entities = req.query.get('entity_id', [])
     manager = core.Instance.Manager
+    removed = {}
     for entity_id in entities:
-        manager.entities.findByEntityId(entity_id).remove()
-    res.send_content('')
+        entity = manager.entities.findByEntityId(entity_id)
+        removed[entity_id] = None
+        if entity is not None:
+            entity.remove()
+            removed[entity_id] = True
+    res.send_json(removed)
 
 ################################################################

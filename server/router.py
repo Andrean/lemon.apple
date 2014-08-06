@@ -125,7 +125,7 @@ class Router(object):
             self._logger.exception(e)
             self._handler.send_content = types.MethodType( send_content, self._handler )
             self._handler.send_json    = types.MethodType( send_json, self._handler )
-            self._handler.send_json({'error': str(e)})
+            self._handler.send_json({'error': {'code': e.code, 'message':e.details['err']}})
         except:
             self._logger.error('{0}\n{1}'.format(self.Name, ''.join(traceback.format_exception(*(sys.exc_info())))))
             # HTTP 500 Handler
