@@ -18,9 +18,11 @@ def SetupSchema():
     ContractorSchema.setup()
     TriggerSchema.setup()
 
+
 def Le(**kwargs):
     kwargs['_lemon_field'] = True
     return kwargs
+
 
 #######################################################################
 #   describe ModelSchemas
@@ -31,6 +33,7 @@ def Le(**kwargs):
 #   ref:    Reference to another Model
 #   unique: Ensures index in MongoDB with UNIQUE: TRUE
 #   index:  if True Ensures index in MongoDB on that field in PyMongo.ASCENDING order
+#   default: default value of field
 #
 #######################################################################
 class AgentSchema(BaseSchema):
@@ -41,7 +44,7 @@ class AgentSchema(BaseSchema):
             'agent_id': uuid.UUID,
             'name': str,
             'tags': [str],
-            'entities': [ Le(type=ObjectId,ref=Entity) ],
+            'entities': [Le(type=ObjectId, ref=Entity)],
             '_sysinfo': {
                 'network_address': str,
                 'last_connect': datetime.datetime,
@@ -78,7 +81,13 @@ class DataItemSchema(BaseSchema):
             'data_type': str,
             'contractor': Le(type=ObjectId, ref=Contractor),
             'trigger': Le(type=ObjectId, ref=Trigger),
-            'data': Le(type=ObjectId, ref=DataMeta)
+            'data': {
+                'count': Le(type=int, default=0),
+                'last': {
+                    'data': dict,
+                    'timestamp': datetime.datetime
+                }
+            }
         }
 
 
@@ -87,7 +96,6 @@ class DataMetaSchema(BaseSchema):
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'meta_id': str,
             'count': 0,
             'last': {
                 'data': {},
@@ -96,16 +104,18 @@ class DataMetaSchema(BaseSchema):
         }
 
 
+# Better decision is storing Data in PostgreSQL DB
+# todo: use postgresql for this data schema
 class DataSchema(BaseSchema):
 
     @classmethod
     def setup_schema(cls):
         cls._schema = {
-            'meta_id': str,
+            'data_item': Le(type=ObjectId, ref=DataItem, index=True),
             'num': int,
             'chunk': [
                 {
-                    'data': {},
+                    'data': dict,
                     'timestamp': datetime.datetime
                 }
             ],
@@ -245,6 +255,7 @@ class Agent(BaseModel):
         if _id is not None and _id in self['entities']:
             self['entities'].remove(_id)
         self.save()
+
 
 #######################################################################
 #   Model "Entity"

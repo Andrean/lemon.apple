@@ -205,6 +205,11 @@ class BaseSchema(object):
                 _lemon_field = v.get('_lemon_field')
                 if _lemon_field is not None:
                     schema[k] = None
+                    _default = v.get('default')
+                    _type = v.get('type')
+                    if _default is not None and _type is not None:
+                        assert(isinstance(_default, _type))
+                        schema[k] = _default
                 else:
                     schema[k] = self._init_data(v)
             elif type(v) == list:
