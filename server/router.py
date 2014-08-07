@@ -14,33 +14,8 @@ import bson.json_util
 
 import defs.errors as errors
 import controllers.base as BaseController
-import controllers.agent_controller as agentsController
-import controllers.web  as webController
-
-
-#####################################################################################
-#    Routes for routing agent's requests
-#####################################################################################
-AGENT_INTERFACE_ROUTES = [
-    [   'GET',    r'^/commands$', agentsController.commands['get']      ],
-    [   'POST',   r'^/commands$', agentsController.commands['post']     ],
-]
-
-#####################################################################################
-#    Routes for routing request from WEB-Server as web-interface
-#####################################################################################
-WEB_INTERFACE_ROUTES = [
-    [   'GET',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['get_entities']   ],
-    [   'PUT',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['add_entity']     ],
-    [   'POST',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['modify_entity'] ],
-    [   'DELETE',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['del_entity']  ],
-    [   'GET',  r'^/agents[?=%&_\-\+\w,\.]*$', webController.agent_manager['get_agents']        ],
-    [   'GET',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.get               ],
-    [   'PUT',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.add               ],
-    [   'DELETE',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.remove         ],
-    [   'GET',  r'^/data/items[?=%&_\-\+\w\.,]*$', webController.data_items.get                 ],
-    [   'POST',  r'^/data/items[?=%&_\-\+\w\.,]*$', webController.data_items.set                ]
-]
+import routes.web_interface as web_interface
+import routes.agent_interface as agent_interface
 
 #####################################################################################
 #   Functions for make request and response references
@@ -158,7 +133,7 @@ class AgentRouter(Router):
         super().__init__('AGENT ROUTER')
 
     def load(self):
-        super().load(AGENT_INTERFACE_ROUTES)
+        super().load(agent_interface.ROUTES)
 
 
 class WebRouter(Router):
@@ -166,4 +141,4 @@ class WebRouter(Router):
         super().__init__('WEB ROUTER')
 
     def load(self):
-        super().load(WEB_INTERFACE_ROUTES)
+        super().load(web_interface.ROUTES)
