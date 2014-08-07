@@ -36,3 +36,18 @@ def set(req, res):
         if k is not '_id':
             item[k] = v
     res.send_json(item.id)
+
+
+def remove(req, res):
+    _ids = req.query.get('id')
+    removed = []
+    if _ids is not None:
+        manager = core.Instance.Manager
+        for x in _ids:
+            item = manager.data_items.findById(x)
+            if item is None:
+                removed.append({'id': x, 'status': "not found"})
+                break
+            item.remove()
+            removed.append({'id': x, 'status': "not found"})
+    res.send_json(removed)
