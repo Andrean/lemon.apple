@@ -1,19 +1,22 @@
 __author__ = 'Andrean'
 
 import logging
-import defs.errors as errors
 from urllib.parse import urlsplit
 from urllib.parse import parse_qs
-import pymongo.errors
 import json
-import bson.json_util
 import types
 import re
 import traceback
 import sys
+
+import pymongo.errors
+import bson.json_util
+
+import defs.errors as errors
 import controllers.base as BaseController
 import controllers.agent_controller as agentsController
 import controllers.web  as webController
+
 
 #####################################################################################
 #    Routes for routing agent's requests
@@ -27,14 +30,16 @@ AGENT_INTERFACE_ROUTES = [
 #    Routes for routing request from WEB-Server as web-interface
 #####################################################################################
 WEB_INTERFACE_ROUTES = [
-    [   'GET',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['get_entities']],
-    [   'PUT',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['add_entity']  ],
-    [   'POST',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['modify_entity']  ],
+    [   'GET',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['get_entities']   ],
+    [   'PUT',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['add_entity']     ],
+    [   'POST',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['modify_entity'] ],
     [   'DELETE',  r'^/entities[?=%&_\-\+\w\.,]*$', webController.entity_manager['del_entity']  ],
-    [   'GET',  r'^/agents[?=%&_\-\+\w,\.]*$', webController.agent_manager['get_agents']  ],
-    [   'GET',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.get ],
-    [   'POST',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.add                ],
-    [   'DELETE',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.remove           ]
+    [   'GET',  r'^/agents[?=%&_\-\+\w,\.]*$', webController.agent_manager['get_agents']        ],
+    [   'GET',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.get               ],
+    [   'PUT',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.add               ],
+    [   'DELETE',  r'^/contractors[?=%&_\-\+\w\.,]*$', webController.contractors.remove         ],
+    [   'GET',  r'^/data/items[?=%&_\-\+\w\.,]*$', webController.data_items.get                 ],
+    [   'POST',  r'^/data/items[?=%&_\-\+\w\.,]*$', webController.data_items.set                ]
 ]
 
 #####################################################################################

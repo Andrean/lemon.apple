@@ -320,10 +320,68 @@ class Entity(BaseModel):
             agent.del_entity(self)
         super().remove()
 
+    def addDataItem(self, item):
+        if isinstance(item, DataItem):
+            if item.id not in self['data_items']:
+                self['data_items'].append(item.id)
+                item['entity'] = self.id
+                item.save()
+                self.save()
+                return item
+        if type(item) is dict:
+            item = DataItem.add_new(item['name'], item['data_type'], self, item['contractor'])
+            self.save()
+            return item
+        return None
+
+    def delDataItem(self, item, full_delete=False):
+        _id = None
+        if isinstance(item, ObjectId):
+            _id = item
+        if isinstance(item, DataItem):
+            _id = item.id
+        if _id is not None:
+            if _id in self['data_items']:
+                self['data_items'].remove(_id)
+                item = DataItem.findById(_id)
+                item['entity'] = None
+                item.save()
+                self.save()
+            if full_delete is True:
+                item.remove()
+
 
 class DataItem(BaseModel):
     Schema = DataItemSchema
     Collection = 'data_items'
+
+    @classmethod
+    def add_new(cls, name, data_type, entity, contractor):
+        data_item = cls()
+        data_item['name'] = name
+        data_item['data_type'] = data_type
+        if isinstance(contractor, Contractor):
+            data_item['contractor'] = contractor.id
+        elif isinstance(contractor,ObjectId):
+            data_item['contractor'] = contractor
+        else:
+            raise TypeError("contractor is not Contractor or ObjectId")
+        e = None
+        if isinstance(entity, BaseModel):
+            data_item['entity'] = entity.id
+            e = Entity.findById(entity.id)
+        if isinstance(entity, ObjectId):
+            data_item['entity'] = entity
+            e = Entity.findById(entity)
+        data_item.save()
+        if e is not None:
+            e.addDataItem(data_item)
+        return data_item
+
+    def remove(self):
+        if self['entity'] is not None:
+            Entity.findById(self['entity']).delDataItem(self)
+        super().remove()
 
 
 class DataMeta(BaseModel):

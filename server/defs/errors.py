@@ -8,6 +8,10 @@ class BaseLemonException(Exception):
         super.__init__(message)
 
 
+class LemonException(BaseLemonException):
+    pass
+
+
 class LemonAttributeError(BaseLemonException, AttributeError):
     pass
 

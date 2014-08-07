@@ -47,3 +47,7 @@ class Manager(BaseServerModule):
     def contractors(self):
         # don't load all instances to memory
         return models.components.Contractor
+
+    @property
+    def data_items(self):
+        return models.components.DataItem

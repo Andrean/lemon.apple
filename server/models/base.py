@@ -2,6 +2,7 @@ __author__ = 'Andrean'
 
 import copy
 import bson
+import bson.objectid
 import bson.dbref
 import core
 
@@ -34,6 +35,7 @@ class BaseModel(object):
 
     @classmethod
     def findById(cls, obj_id):
+        obj_id = bson.objectid.ObjectId(obj_id)
         try:
             if cls._index_objectId is not None:
                 return cls.Instances[cls._index_objectId.get(obj_id)]

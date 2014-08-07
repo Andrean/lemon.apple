@@ -3,6 +3,7 @@ __author__ = 'Andrean'
 import controllers.web_controllers.entitiies as entities
 import controllers.web_controllers.agents as agents
 import controllers.web_controllers.contractors as contractors
+import controllers.web_controllers.data.items as data_items
 
 entity_manager = {}
 entity_manager['get_entities'] = entities.get
@@ -12,5 +13,7 @@ entity_manager['del_entity'] = entities.remove
 
 agent_manager = {}
 agent_manager['get_agents'] = agents.get_agents
+
+data_items_manager = data_items
 
 contractors_manager = contractors
