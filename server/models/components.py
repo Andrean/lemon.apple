@@ -394,7 +394,9 @@ class DataItem(BaseModel):
     def add_data(self, data, timestamp):
         if len(self['data']) == 0:
             data_chunk = DataChunk.add_new(self.id, 0)
+            data_chunk['_firstTimestamp'] = timestamp
             self['data'].append(data_chunk.id)
+            self.save()
         else:
             data_chunk = DataChunk.findById(self['data'][-1])
         assert(isinstance(data_chunk, DataChunk))
@@ -403,6 +405,7 @@ class DataItem(BaseModel):
             data_chunk = DataChunk.add_new(self.id, num + 1)
             data_chunk['_firstTimestamp'] = timestamp
             self['data'].append(data_chunk.id)
+            self.save()
         data_chunk.insert(data, timestamp)
 
 
@@ -419,7 +422,8 @@ class DataChunk(BaseModel):
         if self._id is None:
             return None
         conn = self.get_connection()
-        conn[self.Collection].find_one(self._id, fields=item, exhaust=True)
+        value = conn[self.Collection].find_one(self._id, fields=[item])
+        return value.get(item)
 
     def __setitem__(self, key, value):
         if self._id is None:
@@ -436,8 +440,7 @@ class DataChunk(BaseModel):
     def load(self, _id=None):
         self._id = _id
 
-    @staticmethod
-    def force_load(_id=None):
+    def force_load(self, _id=None):
         super().load(_id)
 
     @classmethod
