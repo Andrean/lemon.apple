@@ -5,9 +5,6 @@ import core
 import defs.request
 import defs.errors
 
-@defs.request.prepare_agent_request
-def get(req, res):
-    pass
 
 @defs.request.prepare_agent_request
 def push(req, res):
