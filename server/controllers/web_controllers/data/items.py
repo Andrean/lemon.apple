@@ -7,18 +7,19 @@ import defs.errors
 def get(req, res):
     entities_id_list = req.query.get('entity_id')
     names = req.query.get('name')
+    populate = req.query.get('populate',[])
     manager = core.Instance.Manager
     if entities_id_list is not None:
         entities_id = [x.id for x in manager.entities if x['entity_id'] in entities_id_list]
         items = manager.data_items.list_instances({'entity': {'$in': entities_id}})
         if names is not None:
             items = [x for x in items if x['name'] in names]
-        res.send_json([x.data for x in items])
+        res.send_json([x.populate(*populate) for x in items])
         return
     if names is not None:
-        res.send_json([x.data for x in manager.data_items.list_instances({'name': {'$in': names}})])
+        res.send_json([x.populate(*populate) for x in manager.data_items.list_instances({'name': {'$in': names}})])
         return
-    res.send_json([x.data for x in manager.data_items.list_instances()])
+    res.send_json([x.populate(*populate) for x in manager.data_items.list_instances()])
 
 
 def set(req, res):
