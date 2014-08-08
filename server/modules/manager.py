@@ -50,4 +50,6 @@ class Manager(BaseServerModule):
 
     @property
     def data_items(self):
+        if models.components.DataItem.Instances is None:
+            models.components.DataItem.load_instances()
         return models.components.DataItem

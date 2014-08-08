@@ -13,8 +13,8 @@ def SetupSchema():
     AgentSchema.setup()
     EntitySchema.setup()
     DataItemSchema.setup()
-    DataMetaSchema.setup()
-    DataSchema.setup()
+    #DataMetaSchema.setup()
+    DataChunkSchema.setup()
     ContractorSchema.setup()
     TriggerSchema.setup()
 
@@ -81,38 +81,33 @@ class DataItemSchema(BaseSchema):
             'data_type': str,
             'contractor': Le(type=ObjectId, ref=Contractor),
             'trigger': Le(type=ObjectId, ref=Trigger),
-            'data': {
-                'count': Le(type=int, default=0),
-                'last': {
-                    'data': dict,
-                    'timestamp': datetime.datetime
-                }
-            }
+            'data': [Le(type=ObjectId, ref=DataChunk, index=True)]
         }
 
 
-class DataMetaSchema(BaseSchema):
-
-    @classmethod
-    def setup_schema(cls):
-        cls._schema = {
-            'count': 0,
-            'last': {
-                'data': {},
-                'timestamp': datetime.datetime
-            }
-        }
+# class DataMetaSchema(BaseSchema):
+#
+#     @classmethod
+#     def setup_schema(cls):
+#         cls._schema = {
+#             'count': 0,
+#             'last': {
+#                 'data': {},
+#                 'timestamp': datetime.datetime
+#             }
+#         }
 
 
 # Better decision is storing Data in PostgreSQL DB
 # todo: use postgresql for this data schema
-class DataSchema(BaseSchema):
+class DataChunkSchema(BaseSchema):
 
     @classmethod
     def setup_schema(cls):
         cls._schema = {
             'data_item': Le(type=ObjectId, ref=DataItem, index=True),
-            'num': int,
+            'num': Le(type=int, default=0),
+            'size': Le(type=int, default=0),
             'chunk': [
                 {
                     'data': dict,
@@ -366,6 +361,8 @@ class DataItem(BaseModel):
     Schema = DataItemSchema
     Collection = 'data_items'
 
+    MaxChunkSize = 256  # max size of DataChunk document field 'chunk'
+
     @classmethod
     def add_new(cls, name, data_type, entity, contractor):
         data_item = cls()
@@ -394,16 +391,80 @@ class DataItem(BaseModel):
             Entity.findById(self['entity']).delDataItem(self)
         super().remove()
 
+    def add_data(self, data, timestamp):
+        if len(self['data']) == 0:
+            data_chunk = DataChunk.add_new(self.id, 0)
+            self['data'].append(data_chunk.id)
+        else:
+            data_chunk = DataChunk.findById(self['data'][-1])
+        assert(isinstance(data_chunk, DataChunk))
+        if data_chunk['size'] >= self.MaxChunkSize:
+            num = data_chunk['num']
+            data_chunk = DataChunk.add_new(self.id, num + 1)
+            data_chunk['_firstTimestamp'] = timestamp
+            self['data'].append(data_chunk.id)
+        data_chunk.insert(data, timestamp)
 
-class DataMeta(BaseModel):
-    Schema = DataMetaSchema
-    Collection = 'data_meta'
+
+# class DataMeta(BaseModel):
+#     Schema = DataMetaSchema
+#     Collection = 'data_meta'
 
 
-class Data(BaseModel):
-    Schema = DataSchema
+class DataChunk(BaseModel):
+    Schema = DataChunkSchema
     Collection = 'data'
 
+    def __getitem__(self, item):
+        if self._id is None:
+            return None
+        conn = self.get_connection()
+        conn[self.Collection].find_one(self._id, fields=item, exhaust=True)
+
+    def __setitem__(self, key, value):
+        if self._id is None:
+            self._data[key] = value
+            return
+        conn = self.get_connection()
+        conn[self.Collection].update({'_id': self._id}, {'$set': {key: value}})
+
+    @property
+    def data(self):
+        self.force_load()
+        return self._data
+
+    def load(self, _id=None):
+        self._id = _id
+
+    @staticmethod
+    def force_load(_id=None):
+        super().load(_id)
+
+    @classmethod
+    def add_new(cls, data_item, num):
+        chunk = cls()
+        chunk.force_load()
+        if isinstance(data_item, DataItem):
+            chunk['data_item'] = data_item.id
+        elif isinstance(data_item, ObjectId):
+            chunk['data_item'] = data_item
+        else:
+            raise TypeError("{0} is not ObjectId or DataItem".format(type(data_item)))
+        chunk['num'] = num
+        chunk.save()
+        return chunk
+
+    def insert(self, data, timestamp):
+        assert(isinstance(timestamp, datetime.datetime))
+        conn = self.get_connection()
+        conn[self.Collection].update(
+            {'_id': self.id},
+            {
+                '$inc': {'size': 1},
+                '$push': {'chunk':{'data': data, 'timestamp': timestamp}},
+                '$set': {'_endTimestamp': timestamp}
+            }
+        )
 
 class Contractor(BaseModel):
     Schema = ContractorSchema

@@ -180,7 +180,6 @@ class BaseModel(object):
         cls.Schema.ensure_index(cls)
 
 
-
 class BaseSchema(object):
     _schema = None
 
