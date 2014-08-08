@@ -26,6 +26,8 @@ def MakeRequest(requestHandler, path):
 
 def send_content(self, content, code=200, headers={}):
     self.send_response(code)
+    if not isinstance(content, str):
+        content = str(content)
     if 'Content-Type' not in headers.keys():
         self.send_header('Content-Type', 'text/plain;charset=utf-8')
     if 'Content-Length' not in headers.keys():
