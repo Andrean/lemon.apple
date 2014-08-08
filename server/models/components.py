@@ -4,6 +4,7 @@ import datetime
 import defs.cmd
 import uuid
 import hashlib
+from defs.search import binary_search
 from bson.objectid import ObjectId
 from bson.binary import Binary
 from models.base import BaseModel, BaseSchema
@@ -400,6 +401,56 @@ class DataItem(BaseModel):
             self['data'].append(data_chunk.id)
             self.save()
         data_chunk.insert(data, timestamp)
+
+    def count_data(self, **kwargs):
+        if len(self['data']) == 0:
+            return 0
+        from_time = kwargs.get('_from')
+        if from_time is None:
+            from_time = datetime.datetime.min
+        to_time = kwargs.get('_to')
+        if to_time is None:
+            to_time = datetime.datetime.max
+        assert(isinstance(from_time, datetime.datetime))
+        assert(isinstance(to_time, datetime.datetime))
+        from_oid_pos = binary_search(self['data'], from_time, self.__comparator_chunks, strict=False)
+        if from_oid_pos == 0.5: # last timestamp in data is less than from
+            return 0
+        if from_oid_pos == -0.5:
+            from_oid_pos = 0
+        to_oid_pos = binary_search(self['data'], to_time, self.__comparator_chunks, strict=False)
+        if to_oid_pos == -0.5: # first timestamp is greater than to
+            return 0
+        if to_oid_pos == 0.5:
+            to_oid_pos = len(self['data']) -1
+        chunk_from = DataChunk(self['data'][from_oid_pos])
+        from_num = binary_search(chunk_from['chunk'], from_time, self.__comparator_data_in_chunk, strict=False)
+        if from_num < 0:
+            from_num = 0
+        chunk_to = DataChunk(self['data'][to_oid_pos])
+        to_num = binary_search(chunk_to['chunk'], to_time, self.__comparator_data_in_chunk, strict=False)
+        if to_num == 0.5:
+            to_num = chunk_to['size'] - 1
+        count = (to_oid_pos - from_oid_pos - 1)*256 + chunk_from['size'] - from_num + to_num
+        return count
+
+
+    @staticmethod
+    def __comparator_chunks(chunk_oid, timestamp):
+        chunk = DataChunk(chunk_oid)
+        if chunk['_firstTimestamp'] > timestamp:
+            return 1
+        if chunk['_endTimestamp'] < timestamp:
+            return -1
+        return 0
+
+    @staticmethod
+    def __comparator_data_in_chunk(el, timestamp):
+        if el['timestamp'] > timestamp:
+            return 1
+        if el['timestamp'] < timestamp:
+            return -1
+        return 0
 
 
 class DataChunk(BaseModel):
