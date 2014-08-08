@@ -25,7 +25,22 @@ import datetime
 #       {'error': {'code':int, 'message': str}
 ############################################################################
 def get(req, res):
-    pass
+    data_items = req.query.get('data_item')
+    if data_items is None:
+        raise defs.errors.LemonAttributeError('"data_item" is empty')
+    from_time = req.query.get('from', [None])[0]
+    if from_time is not None:
+        from_time = datetime.datetime.fromtimestamp(float(from_time))
+    to_time = req.query.get('to', [None])[0]
+    if to_time is not None:
+        to_time = datetime.datetime.fromtimestamp(float(to_time))
+    result = []
+    manager = core.Instance.Manager
+    for data_item_oid in data_items:
+        data_item = manager.data_items.findById(data_item_oid)
+        chunk = [x for x in data_item.get_data(_from=from_time,_to=to_time)]
+        result.append(dict(data_item=data_item_oid, data=chunk))
+    res.send_json(result)
 
 
 ############################################################################

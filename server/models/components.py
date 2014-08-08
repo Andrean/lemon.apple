@@ -403,8 +403,41 @@ class DataItem(BaseModel):
         data_chunk.insert(data, timestamp)
 
     def count_data(self, **kwargs):
-        if len(self['data']) == 0:
+        pos = self.__getelements_pos(**kwargs)
+        if pos is None:
             return 0
+        count = (pos[1][0] - pos[0][0])*256 + pos[1][1] - pos[0][1]
+        return count
+
+    def get_data(self, **kwargs):
+        pos = self.__getelements_pos(**kwargs)
+        if pos is None:
+            return []
+        chunk = DataChunk(self['data'][pos[0][0]])
+        if pos[0][0] == pos[1][0]:
+            for i, item in enumerate(chunk['chunk']):
+                if i < pos[0][1] or i > pos[1][1]:
+                    continue
+                yield [item['data'], item['timestamp']]
+        else:
+            for i, item in enumerate(chunk['chunk']):
+                if i < pos[0][1]:
+                    continue
+                yield [item['data'], item['timestamp']]
+            for i in range(pos[0][0]+1, pos[1][0]-1):
+                chunk = DataChunk(self['data'][i])
+                for item in chunk['chunk']:
+                    yield [item['data'], item['timestamp']]
+            chunk = DataChunk(self['data'][pos[1][1]])
+            for i, item in enumerate(chunk['chunk']):
+                if i > pos[1][1]:
+                    break
+                yield [item['data'], item['timestamp']]
+
+
+    def __getelements_pos(self, **kwargs):
+        if len(self['data']) == 0:
+            return None
         from_time = kwargs.get('_from')
         if from_time is None:
             from_time = datetime.datetime.min
@@ -413,14 +446,15 @@ class DataItem(BaseModel):
             to_time = datetime.datetime.max
         assert(isinstance(from_time, datetime.datetime))
         assert(isinstance(to_time, datetime.datetime))
+        if from_time > to_time:
+            return None
         from_oid_pos = binary_search(self['data'], from_time, self.__comparator_chunks, strict=False)
-        if from_oid_pos == 0.5: # last timestamp in data is less than from
-            return 0
+        to_oid_pos = binary_search(self['data'], to_time, self.__comparator_chunks, strict=False)
+        # last timestamp in data is less than from or first timestamp is greater than to
+        if from_oid_pos == 0.5 or to_oid_pos == -0.5:
+            return None
         if from_oid_pos == -0.5:
             from_oid_pos = 0
-        to_oid_pos = binary_search(self['data'], to_time, self.__comparator_chunks, strict=False)
-        if to_oid_pos == -0.5: # first timestamp is greater than to
-            return 0
         if to_oid_pos == 0.5:
             to_oid_pos = len(self['data']) -1
         chunk_from = DataChunk(self['data'][from_oid_pos])
@@ -431,9 +465,7 @@ class DataItem(BaseModel):
         to_num = binary_search(chunk_to['chunk'], to_time, self.__comparator_data_in_chunk, strict=False)
         if to_num == 0.5:
             to_num = chunk_to['size'] - 1
-        count = (to_oid_pos - from_oid_pos - 1)*256 + chunk_from['size'] - from_num + to_num
-        return count
-
+        return [[from_oid_pos, from_num], [to_oid_pos, to_num]]
 
     @staticmethod
     def __comparator_chunks(chunk_oid, timestamp):
