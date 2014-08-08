@@ -13,7 +13,6 @@ def SetupSchema():
     AgentSchema.setup()
     EntitySchema.setup()
     DataItemSchema.setup()
-    #DataMetaSchema.setup()
     DataChunkSchema.setup()
     ContractorSchema.setup()
     TriggerSchema.setup()
@@ -83,19 +82,6 @@ class DataItemSchema(BaseSchema):
             'trigger': Le(type=ObjectId, ref=Trigger),
             'data': [Le(type=ObjectId, ref=DataChunk, index=True)]
         }
-
-
-# class DataMetaSchema(BaseSchema):
-#
-#     @classmethod
-#     def setup_schema(cls):
-#         cls._schema = {
-#             'count': 0,
-#             'last': {
-#                 'data': {},
-#                 'timestamp': datetime.datetime
-#             }
-#         }
 
 
 # Better decision is storing Data in PostgreSQL DB
@@ -391,6 +377,13 @@ class DataItem(BaseModel):
             Entity.findById(self['entity']).delDataItem(self)
         super().remove()
 
+    def verify_hash(self, hash):
+        assert(isinstance(self['contractor'], ObjectId))
+        conn = self.get_connection()
+        value = conn[Contractor.Collection].find_one(self['contractor'], fields=['_hash'])
+        assert(value is not None)
+        return hash == str(value.get('_hash'))
+
     def add_data(self, data, timestamp):
         if len(self['data']) == 0:
             data_chunk = DataChunk.add_new(self.id, 0)
@@ -407,11 +400,6 @@ class DataItem(BaseModel):
             self['data'].append(data_chunk.id)
             self.save()
         data_chunk.insert(data, timestamp)
-
-
-# class DataMeta(BaseModel):
-#     Schema = DataMetaSchema
-#     Collection = 'data_meta'
 
 
 class DataChunk(BaseModel):

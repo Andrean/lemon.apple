@@ -19,8 +19,9 @@ def push(req, res):
     for item in data:
         print(item)
         data_item_oid = item['data_item']
+        hash = item['hash']
         data_item = manager.data_items.findById(data_item_oid)
-        if data_item is None:
+        if data_item is None or data_item.verify_hash(hash) is not True:
             fail_list.append(data_item_oid)
             continue
         value_list = item['data_list']
