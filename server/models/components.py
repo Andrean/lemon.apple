@@ -409,6 +409,20 @@ class DataItem(BaseModel):
         count = (pos[1][0] - pos[0][0])*256 + pos[1][1] - pos[0][1]
         return count
 
+    def get_last(self, last, chunk_num=None):
+        counter = 0
+        for item in reversed(self['data']):
+            if counter >= last:
+                break
+            data_chunk = DataChunk(item)
+            print(datetime.datetime.now())
+            chunk = reversed(data_chunk['chunk'])
+            print(datetime.datetime.now())
+            for record in chunk:
+                if counter < last:
+                    yield [record['data'], record['timestamp']]
+                    counter += 1
+
     def get_data(self, **kwargs):
         pos = self.__getelements_pos(**kwargs)
         if pos is None:
