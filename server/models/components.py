@@ -409,6 +409,15 @@ class DataItem(BaseModel):
         count = (pos[1][0] - pos[0][0])*256 + pos[1][1] - pos[0][1]
         return count
 
+    def get_data_by_num(self, from_num, to_num):
+        if from_num >= to_num:
+            return []
+        from_index_2 = from_num // self.MaxChunkSize
+        from_index_1 = from_num - from_index_2 * self.MaxChunkSize
+        to_index_2 = to_num // self.MaxChunkSize
+        to_index_1 = to_num - to_index_2 * self.MaxChunkSize
+        return self.__get_by_pos([[from_index_2, from_index_1], [to_index_2, to_index_1]])
+
     def get_last(self, last, chunk_num=None):
         counter = 0
         if chunk_num is not None:
@@ -421,6 +430,8 @@ class DataItem(BaseModel):
                 if counter < last:
                     yield [record['data'], record['timestamp']]
                     counter += 1
+                else:
+                    return
             return
         for item in reversed(self['data']):
             if counter >= last:
@@ -432,31 +443,36 @@ class DataItem(BaseModel):
                     yield [record['data'], record['timestamp']]
                     counter += 1
 
-    def get_data(self, **kwargs):
-        pos = self.__getelements_pos(**kwargs)
+    def __get_by_pos(self, pos):
         if pos is None:
             return []
-        chunk = DataChunk(self['data'][pos[0][0]])
-        if pos[0][0] == pos[1][0]:
-            for i, item in enumerate(chunk['chunk']):
-                if i < pos[0][1] or i > pos[1][1]:
-                    continue
-                yield [item['data'], item['timestamp']]
-        else:
-            for i, item in enumerate(chunk['chunk']):
-                if i < pos[0][1]:
-                    continue
-                yield [item['data'], item['timestamp']]
-            for i in range(pos[0][0]+1, pos[1][0]-1):
-                chunk = DataChunk(self['data'][i])
-                for item in chunk['chunk']:
+        try:
+            chunk = DataChunk(self['data'][pos[0][0]])
+            if pos[0][0] == pos[1][0]:
+                for i, item in enumerate(chunk['chunk']):
+                    if i < pos[0][1] or i > pos[1][1]:
+                        continue
                     yield [item['data'], item['timestamp']]
-            chunk = DataChunk(self['data'][pos[1][1]])
-            for i, item in enumerate(chunk['chunk']):
-                if i > pos[1][1]:
-                    break
-                yield [item['data'], item['timestamp']]
+            else:
+                for i, item in enumerate(chunk['chunk']):
+                    if i < pos[0][1]:
+                        continue
+                    yield [item['data'], item['timestamp']]
+                for i in range(pos[0][0]+1, pos[1][0]-1):
+                    chunk = DataChunk(self['data'][i])
+                    for item in chunk['chunk']:
+                        yield [item['data'], item['timestamp']]
+                chunk = DataChunk(self['data'][pos[1][1]])
+                for i, item in enumerate(chunk['chunk']):
+                    if i > pos[1][1]:
+                        break
+                    yield [item['data'], item['timestamp']]
+        except IndexError:
+            return []
 
+    def get_data(self, **kwargs):
+        pos = self.__getelements_pos(**kwargs)
+        return self.__get_by_pos(pos)
 
     def __getelements_pos(self, **kwargs):
         if len(self['data']) == 0:

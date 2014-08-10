@@ -34,6 +34,12 @@ def get(req, res):
     to_time = req.query.get('to', [None])[0]
     if to_time is not None:
         to_time = datetime.datetime.fromtimestamp(float(to_time))
+    from_num = req.query.get('from_num', [None])[0]
+    to_num = req.query.get('to_num', [None])[0]
+    if from_num is not None:
+        from_num = int(from_num)
+    if to_num is not None:
+        to_num = int(to_num)
     last = req.query.get('last', [None])[0]
     chunk_num = req.query.get('chunk', [None])[0]
     result = []
@@ -42,9 +48,22 @@ def get(req, res):
         last = int(last)
         for data_item_oid in data_items:
             data_item = manager.data_items.findById(data_item_oid)
-            print(datetime.datetime.now())
             chunk = [x for x in data_item.get_last(last, chunk_num)]
-            print(datetime.datetime.now())
+            result.append(dict(data_item=data_item_oid, data=chunk))
+        res.send_json(result)
+        return
+    if chunk_num is not None:
+        last = manager.data_items.MaxChunkSize
+        for data_item_oid in data_items:
+            data_item = manager.data_items.findById(data_item_oid)
+            chunk = [x for x in data_item.get_last(last, chunk_num)]
+            result.append(dict(data_item=data_item_oid, data=chunk))
+        res.send_json(result)
+        return
+    if from_num is not None or to_num is not None:
+        for data_item_oid in data_items:
+            data_item = manager.data_items.findById(data_item_oid)
+            chunk = [x for x in data_item.get_data_by_num(from_num=from_num, to_num=to_num)]
             result.append(dict(data_item=data_item_oid, data=chunk))
         res.send_json(result)
         return
