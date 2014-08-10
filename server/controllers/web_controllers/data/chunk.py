@@ -35,6 +35,7 @@ def get(req, res):
     if to_time is not None:
         to_time = datetime.datetime.fromtimestamp(float(to_time))
     last = req.query.get('last', [None])[0]
+    chunk_num = req.query.get('chunk', [None])[0]
     result = []
     manager = core.Instance.Manager
     if last is not None:
@@ -42,7 +43,7 @@ def get(req, res):
         for data_item_oid in data_items:
             data_item = manager.data_items.findById(data_item_oid)
             print(datetime.datetime.now())
-            chunk = [x for x in data_item.get_last(last)]
+            chunk = [x for x in data_item.get_last(last, chunk_num)]
             print(datetime.datetime.now())
             result.append(dict(data_item=data_item_oid, data=chunk))
         res.send_json(result)

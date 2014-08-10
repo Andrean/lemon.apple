@@ -411,13 +411,22 @@ class DataItem(BaseModel):
 
     def get_last(self, last, chunk_num=None):
         counter = 0
+        if chunk_num is not None:
+            chunk_num = int(chunk_num)
+            if chunk_num >= len(self['data']):
+                return []
+            data_chunk = DataChunk(self['data'][chunk_num])
+            chunk = reversed(data_chunk['chunk'])
+            for record in chunk:
+                if counter < last:
+                    yield [record['data'], record['timestamp']]
+                    counter += 1
+            return
         for item in reversed(self['data']):
             if counter >= last:
                 break
             data_chunk = DataChunk(item)
-            print(datetime.datetime.now())
             chunk = reversed(data_chunk['chunk'])
-            print(datetime.datetime.now())
             for record in chunk:
                 if counter < last:
                     yield [record['data'], record['timestamp']]
