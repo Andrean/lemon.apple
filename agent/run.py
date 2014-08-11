@@ -1,7 +1,8 @@
 __author__ = 'Andrean'
 
-import config
+import config, core
 import traceback, sys
+import modules.client, modules.storage, modules.manager
 
 if __name__ == "__main__":
     # load config
@@ -13,5 +14,10 @@ if __name__ == "__main__":
         cfg = config.Config()
         cfg.Load('conf/agent.yaml')
         cfg.LoadLogging('conf/logging.yaml')
+        c = core.Core(cfg)
+        c.add(modules.storage.Storage)
+        c.add(modules.client.Client)
+        c.add(modules.manager.Manager)
+        c.start()
     except:
         traceback.print_exc(file=sys.stderr)
