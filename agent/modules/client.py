@@ -49,7 +49,7 @@ class Client(BaseAgentModule):
                 if self._stop.is_set():
                     break
         self._command_channel.close()
-        self._logger.info("Command Channel stops successfully")
+        self._logger.info("Command Channel stopped successfully")
 
     def process_data(self):
         while True:
@@ -59,7 +59,7 @@ class Client(BaseAgentModule):
                 if self._stop.is_set():
                     break
         self._data_channel.close()
-        self._logger.info("Data Channel stops successfully")
+        self._logger.info("Data Channel stopped successfully")
 
     def stop(self):
         self._logger.info("Stopping HTTP Connections...")
