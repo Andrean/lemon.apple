@@ -19,5 +19,6 @@ if __name__ == "__main__":
         c.add(modules.client.Client)
         c.add(modules.manager.Manager)
         c.start()
+        print(c.Storage.get('agent_id'))
     except:
         traceback.print_exc(file=sys.stderr)

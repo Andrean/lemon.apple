@@ -11,7 +11,7 @@ class BaseAgentModule(object):
     def __init__(self, core):
         self._core = core
         self._logger = logging.getLogger('main.'+self.Name)
-        self._config = core.Config.GetSection(self.Name.upper())
+        self._config = core.Config.GetSection(self.Name.lower())
 
     def start(self):
         raise NotImplementedError
