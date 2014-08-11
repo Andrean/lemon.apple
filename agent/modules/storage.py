@@ -25,6 +25,7 @@ class Storage(BaseAgentModule):
                 self._logger.info("AGENT ID is {0}".format(agent_id))
                 db['agent_id'] = agent_id
         self._db = data_path
+        self.agent_id = self.get('agent_id')
         self._logger.info("Database is loaded")
 
     def stop(self):
@@ -37,3 +38,4 @@ class Storage(BaseAgentModule):
     def set(self, key, value):
         with shelve.open(self._db) as db:
             db[key] = value
+
