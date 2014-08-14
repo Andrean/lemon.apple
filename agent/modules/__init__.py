@@ -2,6 +2,7 @@ __author__ = 'Andrean'
 
 import logging
 
+
 class BaseAgentModule(object):
     """
     Base module class for Agent Module
