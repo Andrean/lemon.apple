@@ -84,35 +84,30 @@ class Router(object):
         self.Methods = ['GET', 'POST', 'PUT', 'HEAD', 'DELETE']
         self._logger = logging.getLogger('main.'+self.Name)
         self._routes = []
-        self._handler = {}
 
-    def install_handler(self, request_handler, method = 'GET'):
-        self._handler = request_handler
-        self._method = method
-
-    def dispatch(self, path):
+    def dispatch(self, handler, method, path):
         try:
             for rule in self._routes:
-                if rule['method'] == self._method and re.search(rule['pattern'], path):
+                if rule['method'] == method and re.search(rule['pattern'], path):
                     rule['action'](
-                        MakeRequest(self._handler, path),
-                        MakeResponse(self._handler)
+                        MakeRequest(handler, path),
+                        MakeResponse(handler)
                     )
                     return
         except errors.BaseLemonException as e:
             self._logger.exception(e)
-            self._handler.send_content = types.MethodType( send_content, self._handler )
-            self._handler.send_json    = types.MethodType( send_json, self._handler )
-            self._handler.send_json({'error': e.message})
+            handler.send_content = types.MethodType( send_content, handler )
+            handler.send_json    = types.MethodType( send_json, handler )
+            handler.send_json({'error': e.message})
         except pymongo.errors.PyMongoError as e:
             self._logger.exception(e)
-            self._handler.send_content = types.MethodType( send_content, self._handler )
-            self._handler.send_json    = types.MethodType( send_json, self._handler )
-            self._handler.send_json({'error': {'code': e.code, 'message':e.details['err']}})
+            handler.send_content = types.MethodType( send_content, handler )
+            handler.send_json    = types.MethodType( send_json, handler )
+            handler.send_json({'error': {'code': e.code, 'message':e.details['err']}})
         except:
             self._logger.error('{0}\n{1}'.format(self.Name, ''.join(traceback.format_exception(*(sys.exc_info())))))
             # HTTP 500 Handler
-            BaseController.get_500(self._handler)
+            BaseController.get_500(handler)
 
 
     def add_route(self, method, url_pattern, action):

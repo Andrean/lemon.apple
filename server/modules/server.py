@@ -91,25 +91,20 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         router = self.server.request_router
-        router.install_handler(self, 'GET')
-        router.dispatch(self.path)
+        router.dispatch(self, 'GET', self.path)
 
     def do_POST(self):
         router = self.server.request_router
-        router.install_handler(self, 'POST')
-        router.dispatch(self.path)
+        router.dispatch(self, 'POST', self.path)
 
     def do_PUT(self):
         router = self.server.request_router
-        router.install_handler(self, 'PUT')
-        router.dispatch(self.path)
+        router.dispatch(self, 'PUT', self.path)
 
     def do_HEAD(self):
         router = self.server.request_router
-        router.install_handler(self, 'HEAD')
-        router.dispatch(self.path)
+        router.dispatch(self, 'HEAD', self.path)
 
     def do_DELETE(self):
         router = self.server.request_router
-        router.install_handler(self, 'DELETE')
-        router.dispatch(self.path)
+        router.dispatch(self, 'DELETE', self.path)
