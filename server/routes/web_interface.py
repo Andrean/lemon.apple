@@ -18,6 +18,7 @@ ROUTES = [
     [   'POST',  r'^/data/items[?=%&_\-\+\w\.,]*$', webController.data_items.set                ],
     [   'DELETE',  r'^/data/items[?=%&_\-\+\w\.,]*$', webController.data_items.remove           ],
     [   'GET',  r'^/data/chunk[?=%&_\-\+\w\.,]*$', webController.data_chunks.get                ],
-    [   'GET',  r'^/data/chunk/count[?=%&_\-\+\w\.,]*$', webController.data_chunks.count        ]
+    [   'GET',  r'^/data/chunk/count[?=%&_\-\+\w\.,]*$', webController.data_chunks.count        ],
+    [   'GET',  r'^/commands/send[?=%&_\-\+\w\.,]*$', webController.commands.send_to            ]
 ]
 

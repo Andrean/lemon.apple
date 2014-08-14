@@ -21,7 +21,9 @@ class CommandStatusEnum(enum.IntEnum):
 class Command(object):
 
     def __init__(self, cmd=None, tags=[], args=[]):
-        if cmd is not None:
+        if type(cmd) is dict:
+            self.from_dict(cmd)
+        if type(cmd) is str:
             self.id = uuid4()
             self.cmd = cmd
             self.tags = tags

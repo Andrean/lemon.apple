@@ -14,7 +14,6 @@ def push(req, res):
     fail_list = []
     data = req.json
     for item in data:
-        print(item)
         data_item_oid = item['data_item']
         hash = item['hash']
         data_item = manager.data_items.findById(data_item_oid)

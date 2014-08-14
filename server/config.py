@@ -11,6 +11,7 @@ class Config(object):
     '''
     Storage = {}
     Server  = {}
+    Manager = {}
     root    = {}
 
     def __init__(self, file = None):

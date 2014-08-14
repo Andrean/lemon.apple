@@ -23,6 +23,7 @@ def get(req, res):
     for cmd in cmd_list:
         agent.commands[cmd.id].status = CmdStatus.submit
 
+
 @defs.request.prepare_agent_request
 def send(req, res):
     manager = core.Instance.Manager
@@ -33,6 +34,7 @@ def send(req, res):
     if req.json is not None:
         from_commands = req.json
         for command in from_commands:
-            agent.commands[command['id']].response = command['response']
-            agent.commands[command['id']].status = command['status']
+            if agent.commands[command['id']] is not None:
+                agent.commands[command['id']].response = command['response']
+                agent.commands[command['id']].status = command['status']
     res.send_json({})
