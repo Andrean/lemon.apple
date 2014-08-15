@@ -13,9 +13,6 @@ entity_manager['add_entity'] = entities.add
 entity_manager['modify_entity'] = entities.modify
 entity_manager['del_entity'] = entities.remove
 
-agent_manager = {}
-agent_manager['get_agents'] = agents.get_agents
-
 data_items_manager = data_items
 data_chunks = controllers.web_controllers.data.chunk
 

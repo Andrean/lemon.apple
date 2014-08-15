@@ -121,7 +121,7 @@ class BaseModel(object):
         if type(_id) is bson.ObjectId:
             self._id = _id
             self._dbref = bson.dbref.DBRef(self._collection, self._id)
-            self.load_instances()
+#            self.load_instances()
         return self
 
     def remove(self):

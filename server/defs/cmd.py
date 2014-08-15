@@ -80,7 +80,12 @@ class Commands(object):
         self.commands[command.id] = self_command
 
     def find(self, status=None):
+        if status is None:
+            return [cmd for cmd in self.commands.values()]
         return [cmd for cmd in self.commands.values() if cmd.status == status]
+
+    def dict(self, status=None):
+        return [x.to_dict() for x in self.find(status)]
 
     def delete(self, cmd_id):
         self.commands.pop(cmd_id)

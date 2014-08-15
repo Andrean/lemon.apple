@@ -35,6 +35,6 @@ def send(req, res):
         from_commands = req.json
         for command in from_commands:
             if agent.commands[command['id']] is not None:
-                agent.commands[command['id']].response = command['response']
-                agent.commands[command['id']].status = command['status']
+               agent.commands[command['id']].response = command['response']
+               agent.commands[command['id']].status = command['status']
     res.send_json({})
