@@ -11,9 +11,11 @@ class BaseModel(object):
     Schema = None
     Collection = None
     Instances = None
+    virtual = None
     _index_objectId = None
 
     def __init__(self, item=None):
+        self.virtual = {}
         self._dbref = {}
         self._collection = self.__class__.Collection
         self.schema_instance = self.Schema()
@@ -69,10 +71,14 @@ class BaseModel(object):
     def get_connection():
         return core.Instance.Storage.connection
 
-    def __getitem__(self, item):
-        return self._data.get(item)
+    def __getitem__(self, key):
+        if key in self.virtual:
+            return self.virtual.get(key)
+        return self._data.get(key)
 
     def __setitem__(self, key, value):
+        if key in self.virtual:
+            self.virtual[key] = value
         if self.schema_instance.is_valid(key, value):
             self._raw[key] = value
             self._data[key] = value
@@ -92,6 +98,10 @@ class BaseModel(object):
     @property
     def data(self):
         return self._data
+
+    @property
+    def raw(self):
+        return self._raw
 
     @property
     def DbRef(self):
@@ -135,6 +145,8 @@ class BaseModel(object):
         if len(fields) > 0:
             for k in fields:
                 data = self._populate(data, self.schema_instance._schema, k)
+        for k, v in self.virtual.items():
+            data[k] = v.dict()
         return data
     
     def _populate(self, data, schema, field=None):

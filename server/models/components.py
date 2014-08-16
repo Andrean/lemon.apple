@@ -147,7 +147,11 @@ class Agent(BaseModel):
 
     def __init__(self, item=None):
         super().__init__(item)
-        self.commands = defs.cmd.Commands()
+        self.virtual['commands'] = defs.cmd.Commands()
+
+    @property
+    def commands(self):
+        return self.virtual['commands']
 
     @classmethod
     def add_new(cls, agent_id, client_host):
