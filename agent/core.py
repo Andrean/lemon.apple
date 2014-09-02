@@ -3,21 +3,25 @@ __author__ = 'Andrean'
 import logging
 import modules
 
-Instance = None
 
 class Core(object):
     '''
     Core class. It keeps all working instances of Lemon agent
+    Core is Singleton
     '''
+    Instance = None
     Config = {}
     # core components
     modules = {}
 
+    def __new__(cls, *args, **kwargs):
+        if cls.Instance is None:
+            cls.Instance = super(Core, cls).__new__(cls)
+        return cls.Instance
+
     def __init__(self, config=None):
         self.Config = config
         self._logger = logging.getLogger('main.Core')
-        global Instance  # user for global access for Core
-        Instance = self
         self._order = []
 
     def add(self, module):
@@ -49,3 +53,7 @@ class Core(object):
     @property
     def Manager(self):
         return self.modules.get('Manager')
+
+    @property
+    def ContractorManager(self):
+        return self.modules.get('ContractorManager')
