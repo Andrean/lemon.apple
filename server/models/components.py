@@ -593,7 +593,7 @@ class Contractor(BaseModel):
         contractor = cls()
         contractor['name'] = name
         contractor['data'] = Binary(binary_data)
-        contractor['_type'] = "python"
+        contractor['_type'] = "py"
         contractor['_hash'] = cls.get_md5(contractor['data'])
         contractor.save()
         return contractor
