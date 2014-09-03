@@ -1,13 +1,23 @@
 __author__ = 'Andrean'
 
 from modules import BaseAgentModule
+import bson.json_util
+import datetime
+import json
 import threading
+import traceback
 import time
 import commands
+import os
+import sys
+import schedule
+import subprocess
 import defs.cmd
 import queue
+import core
+import defs
 import defs.scheduler
-
+import hashlib
 
 COMMANDS_POLL_INTERVAl = 5  # every 1 second try to get commands
 
@@ -19,19 +29,15 @@ class Manager(BaseAgentModule):
         super().__init__(core)
         self._client = self._core.Client
         self._stop = threading.Event()
-        self._commands_handler = threading.Thread(target=self._handle_commands)
-        self.commandManager = commands.CommandManager()
-     #  self._commandsTimer = defs.scheduler.IntervalTimer(COMMANDS_POLL_INTERVAl, self._client.get_commands)
-        # self._process = threading.Thread(
-        #     target=
-        # )
+        self._commands_handler = None
+        self.commandManager = None
 
     def start(self):
         self._logger.info('Starting commands timer')
-        # waiting storage and client
+        self._commands_handler = threading.Thread(target=self._handle_commands)
+        self.commandManager = commands.CommandManager()
         self.commandManager.start()
         self._commands_handler.start()
-     #  self._commandsTimer.start()
 
     def stop(self):
         self._logger.info('Stopping commands timer...')
@@ -59,4 +65,7 @@ class Manager(BaseAgentModule):
             except Exception as err:
                 self._logger.exception(err)
                 time.sleep(1)
+
+
+
 

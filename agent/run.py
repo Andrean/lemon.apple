@@ -2,7 +2,7 @@ __author__ = 'Andrean'
 
 import config,core
 import traceback, sys, threading, time
-import modules.client, modules.storage, modules.manager
+import modules.client, modules.storage, modules.managers
 
 if __name__ == "__main__":
     # load config
@@ -17,7 +17,7 @@ if __name__ == "__main__":
         c = core.Core(cfg)
         c.add(modules.storage.Storage)
         c.add(modules.client.Client)
-        c.add(modules.manager.Manager)
+        c.add(modules.managers.Manager)
         c.start()
         #c.Client.send_data()
         while True:

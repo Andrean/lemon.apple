@@ -47,14 +47,6 @@ class Client(BaseAgentModule):
         self._queue = Queue(50)
         self._data_queue = Queue(500)
         self._stop = threading.Event()
-        self.command_processor = threading.Thread(
-            target=self.process_commands,
-            name="COMMAND PROCESSOR"
-        )
-        self.data_processor = threading.Thread(
-            target=self.process_data,
-            name="DATA PROCESSOR"
-        )
 
     def start(self):
         endpoint = self._config.get('server')
@@ -71,38 +63,19 @@ class Client(BaseAgentModule):
             raise ConnectionError("Cannot connect Command Channel")
         if self.connect_channel(self._data_channel) == 0:
             raise ConnectionError("Cannot connect Data Channel")
-        #self.command_processor.start()
+        self.data_processor = threading.Thread(
+            target=self.process_data,
+            name="DATA PROCESSOR"
+        )
         self.data_processor.start()
-
-    def process_commands(self):
-        while True:
-            try:
-                item = self._queue.get(timeout=10)
-                response = self._request(channel=self._command_channel, url='/commands', **item)
-                if response is not None:
-                    print(response.status)
-                    print(response.headers)
-                    print(response.json)
-                else:
-                    self.connect_channel(self._command_channel)
-                    self._logger.info('Clear Command Queue after reconnection')
-                    with self._queue.mutex:
-                        self._queue.queue.clear()
-                self._queue.task_done()
-            except Empty:
-                if self._stop.is_set():
-                    break
-        self._command_channel.close()
-        self._logger.info("Command Channel stopped successfully")
 
     def process_data(self):
         while True:
             try:
                 item = self._data_queue.get(timeout=10)
-                print(item)
                 response = self._request(self._data_channel, 'POST', '/data', item)
                 if response is not None:
-                    pass
+                    print(response)
                     #check response status. it cannot be not 200
                     # todo: read answer of server and resend failed data items
             except Empty:
@@ -114,11 +87,8 @@ class Client(BaseAgentModule):
     def stop(self):
         self._logger.info("Stopping HTTP Connections...")
         self._stop.set()
+        self._command_channel.close()
         self.data_processor.join(timeout=60)
-        self.command_processor.join(timeout=60)
-        if self.command_processor.is_alive():
-            self._logger.warn('Command Channel thread is still alive. Try to kill them')
-            raise RuntimeError
         if self.data_processor.is_alive():
             self._logger.warn('Data Channel thread is still alive. Try to kill them')
             raise RuntimeError
@@ -133,6 +103,9 @@ class Client(BaseAgentModule):
 
     def send_data(self, data):
         self._data_queue.put(data, timeout=50)
+
+    def send_error(self, error):
+        pass
 
     def get_commands(self):
         print(time.time())
