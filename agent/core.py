@@ -1,7 +1,7 @@
 __author__ = 'Andrean'
 
 import logging
-import modules
+from modules import BaseAgentModule
 
 
 class Core(object):
@@ -26,7 +26,7 @@ class Core(object):
 
     def add(self, module):
         instance = module(self)
-        assert isinstance(instance, modules.BaseAgentModule)
+        assert isinstance(instance, BaseAgentModule)
         self.modules[instance.Name] = instance
         self._order.append(instance.Name)
 
@@ -53,7 +53,3 @@ class Core(object):
     @property
     def Manager(self):
         return self.modules.get('Manager')
-
-    @property
-    def ContractorManager(self):
-        return self.modules.get('ContractorManager')

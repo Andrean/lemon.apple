@@ -19,7 +19,3 @@ class BaseAgentModule(object):
 
     def stop(self):
         raise NotImplementedError
-
-import modules.client as client
-import modules.managers as managers
-import modules.storage as storage

@@ -1,6 +1,8 @@
 __author__ = 'Andrean'
 
 import commands.controllers
+import commands.controllers.contractor
+import commands.controllers.test
 
 Routes = [
     ['test',            commands.controllers.test.test                      ],
