@@ -61,6 +61,8 @@ class Commands(object):
             'command_id': Command
         }
     """
+    max_completed_count = 20 # max count of commands with completed or error status
+
     def __init__(self):
         self.commands = {}
 
@@ -78,6 +80,7 @@ class Commands(object):
         self_command = Command()
         self_command.from_dict(cmd_dict)
         self.commands[command.id] = self_command
+        self._remove_completed()
 
     def find(self, status=None):
         if status is None:
@@ -89,3 +92,12 @@ class Commands(object):
 
     def delete(self, cmd_id):
         self.commands.pop(cmd_id)
+
+    def _remove_completed(self):
+        remove_list = []
+        for cmd in sorted(self.commands.values(),key=lambda x: x.time):
+            if cmd.status == CommandStatusEnum.completed or cmd.status == CommandStatusEnum.error:
+                remove_list.append(cmd.id)
+        if len(remove_list) > self.max_completed_count:
+            for i in range(0,self.max_completed_count-1):
+                self.commands.pop(remove_list[i])
