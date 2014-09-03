@@ -66,6 +66,7 @@ class CommandHandler(object):
         t.start()
 
     def do(self):
+        self.set_pending(dict(percent=0, msg='Command started'))
         self.router.dispatch(self, self.command.cmd)
 
     def set_status(self, status, msg):
