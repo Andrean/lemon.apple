@@ -68,6 +68,7 @@ class CommandHandler(object):
     def do(self):
         self.set_pending(dict(percent=0, msg='Command started'))
         self.router.dispatch(self, self.command.cmd)
+        self.set_completed()
 
     def set_status(self, status, msg):
         with self.manager.mutex:
@@ -82,8 +83,9 @@ class CommandHandler(object):
         self.manager.command_ready.set()
 
     def set_completed(self, msg=""):
-        self.set_status(defs.cmd.CommandStatusEnum.completed, msg)
-        self.manager.command_ready.set()
+        if self.command.status == defs.cmd.CommandStatusEnum.pending:
+            self.set_status(defs.cmd.CommandStatusEnum.completed, msg)
+            self.manager.command_ready.set()
 
 class CommandRouter(object):
 

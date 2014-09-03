@@ -1,6 +1,7 @@
 __author__ = 'Andrean'
 
 import time
+from models.contractor import Contractor
 
 def test(req):
     print('Command "test" is started')
