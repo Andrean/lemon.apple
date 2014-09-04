@@ -5,9 +5,14 @@ import defs.errors
 
 
 def send_to(req, res):
-    tags = req.query.get('tag')
-    command = req.query.get('command', [None])[0]
-    args = req.query.get('arg', [])
+    if req.json is not None:
+        tags = req.json['tags']
+        command = req.json['command']
+        args = req.json['args']
+    else:
+        tags = req.query.get('tag')
+        command = req.query.get('command', [None])[0]
+        args = req.query.get('arg', [])
     if not isinstance(tags, list):
         raise defs.errors.LemonValueError('tag not found')
     if not isinstance(command, str):
